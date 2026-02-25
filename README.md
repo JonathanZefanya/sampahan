@@ -299,16 +299,17 @@ Setelah menjalankan `php spark db:seed DatabaseSeeder`:
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | `admin@sampahan.id` | `password` |
-| Dinas | `dinas@sampahan.id` | `password` |
-| Masyarakat | `masyarakat@sampahan.id` | `password` |
+| Admin | `admin@sampahan.id` | `Admin@1234` |
 
 > **Ganti semua password default segera setelah deploy ke production.**
+
+## GeoJSON Kota/Kabupaten Source
+[Source](https://www.petanusa.web.id)
 
 ---
 
 ## Lisensi
 
-Project ini dikembangkan untuk keperluan tugas / skripsi / penelitian.  
+Project ini dikembangkan untuk keperluan penelitian.  
 Framework CodeIgniter 4 dilisensikan di bawah [MIT License](https://opensource.org/licenses/MIT).
 
