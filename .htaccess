@@ -1,0 +1,91 @@
+# ============================================================================
+#  Root .htaccess – CodeIgniter 4
+#  Routes every request transparently through public/ without exposing
+#  "/public/" in the URL.
+#
+#  If your project lives in a sub-folder (e.g. example.com/sampahan/)
+#  set RewriteBase below to:  RewriteBase /sampahan/
+#  If it lives at the domain root, leave it as:  RewriteBase /
+# ============================================================================
+
+Options -Indexes -ExecCGI
+
+# ── Security: block direct access to sensitive files ─────────────────────────
+<FilesMatch "^(\.env|\.env\.*|composer\.(json|lock)|phpunit\.xml.*|spark|README\.md|SETUP\.md|LICENSE|preload\.php)$">
+    <IfModule authz_core_module>
+        Require all denied
+    </IfModule>
+    <IfModule !authz_core_module>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Block dot-files (.git, .htpasswd, etc.) except .htaccess itself
+<FilesMatch "^\.[^h]">
+    <IfModule authz_core_module>
+        Require all denied
+    </IfModule>
+    <IfModule !authz_core_module>
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ── Security: block direct browsing into private directories ─────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Block requests that try to directly access app/, writable/, tests/, builds/
+    RewriteRule ^(app|writable|tests|builds)(/.*)?$ - [F,L]
+
+    # ── Route everything through public/ ─────────────────────────────────────
+    # 1. If the request is for an actual file/dir in public/ → serve it directly
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # 2. If request already starts with public/ → don't loop
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L,QSA]
+
+    # Ensure Authorization header is forwarded (needed for API tokens)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    ErrorDocument 404 /public/index.php
+</IfModule>
+
+# ── Security headers ─────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options  "nosniff"
+    Header always set X-Frame-Options         "SAMEORIGIN"
+    Header always set X-XSS-Protection        "1; mode=block"
+    Header always set Referrer-Policy         "strict-origin-when-cross-origin"
+    # Remove PHP version disclosure
+    Header unset X-Powered-By
+</IfModule>
+
+# ── Compression ──────────────────────────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml application/xml
+</IfModule>
+
+# ── Browser cache for static assets ──────────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg        "access plus 1 year"
+    ExpiresByType image/png         "access plus 1 year"
+    ExpiresByType image/gif         "access plus 1 year"
+    ExpiresByType image/svg+xml     "access plus 1 year"
+    ExpiresByType image/webp        "access plus 1 year"
+    ExpiresByType image/x-icon      "access plus 1 year"
+    ExpiresByType text/css          "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/json  "access plus 0 seconds"
+    ExpiresByType text/html         "access plus 0 seconds"
+</IfModule>
+
+# Disable server signature
+ServerSignature Off
