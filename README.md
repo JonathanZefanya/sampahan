@@ -303,6 +303,8 @@ Setelah menjalankan `php spark db:seed DatabaseSeeder`:
 
 > **Ganti semua password default segera setelah deploy ke production.**
 
+---
+
 ## GeoJSON Kota/Kabupaten Source
 [Source](https://www.petanusa.web.id)
 
