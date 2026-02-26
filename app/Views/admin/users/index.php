@@ -1,5 +1,5 @@
 <?php
-$roleBadge = ['admin'=>['dark','Admin'],'dinas'=>['success','Dinas'],'masyarakat'=>['primary','Masyarakat']];
+$roleBadge = ['admin'=>['dark','Pemerintah'],'dinas'=>['success','Dinas'],'masyarakat'=>['primary','Masyarakat']];
 $totalUsers = count($users ?? []);
 ?>
 
@@ -28,7 +28,7 @@ $totalUsers = count($users ?? []);
             <div class="col-12 col-md-7">
                 <div class="d-flex gap-1 flex-wrap">
                     <?php
-                    $roles = ['' => 'Semua', 'admin' => 'Admin', 'dinas' => 'Dinas', 'masyarakat' => 'Masyarakat'];
+                    $roles = ['' => 'Semua', 'admin' => 'Pemerintah', 'dinas' => 'Dinas', 'masyarakat' => 'Masyarakat'];
                     foreach ($roles as $val => $lbl):
                         $active = ($filterRole ?? '') === $val;
                     ?>

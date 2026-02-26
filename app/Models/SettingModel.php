@@ -73,6 +73,7 @@ class SettingModel extends Model
         if ($existing) {
             $result = $this->where('key', $key)->set([
                 'value'      => $value,
+                'group'      => $group,
                 'updated_at' => $now,
             ])->update();
         } else {

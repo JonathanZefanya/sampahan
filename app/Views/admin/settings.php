@@ -38,6 +38,11 @@ $extraHead = '
             <i class="bi bi-sliders me-1"></i>Umum
         </button>
     </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-captcha" type="button">
+            <i class="bi bi-shield-check me-1"></i>Captcha
+        </button>
+    </li>
 </ul>
 
 <div class="tab-content">
@@ -227,7 +232,7 @@ $extraHead = '
                         <div class="input-group">
                             <input type="password" name="smtp_pass" id="smtpPassInput" class="form-control"
                                    value="<?= esc($mail['smtp_pass'] ?? '') ?>" placeholder="App password / SMTP password">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePass()">
+                            <button class="btn btn-outline-secondary" type="button" onclick="toggleField('smtpPassInput','passEyeIcon')">
                                 <i class="bi bi-eye" id="passEyeIcon"></i>
                             </button>
                         </div>
@@ -354,6 +359,98 @@ $extraHead = '
         </form>
     </div>
 
+    <!--  CAPTCHA  -->
+    <div class="tab-pane fade" id="tab-captcha">
+        <form action="<?= base_url('admin/settings') ?>" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="_tab" value="#tab-captcha">
+
+            <div class="card mb-4">
+                <div class="card-section-header">
+                    <i class="bi bi-shield-check text-info me-2"></i>Konfigurasi Captcha
+                    <span class="badge bg-info ms-2 fw-normal">Melindungi formulir laporan tamu</span>
+                </div>
+
+                <div class="card-body row g-4">
+
+                    <!-- Provider selector -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Provider Captcha</label>
+                        <?php
+                        $currentProvider = $captcha['captcha_provider'] ?? 'none';
+                        $providers = [
+                            'none'       => ['icon' => 'bi-x-circle',       'label' => 'Nonaktif (tidak ada captcha)',          'color' => '#64748b'],
+                            'recaptcha'  => ['icon' => 'bi-google',          'label' => 'Google reCAPTCHA v2',                   'color' => '#4285f4'],
+                            'turnstile'  => ['icon' => 'bi-cloud-check',     'label' => 'Cloudflare Turnstile',                  'color' => '#f6821f'],
+                            'selfhosted' => ['icon' => 'bi-cpu',          'label' => 'Captcha Bawaan (Math Challenge)',         'color' => '#198754'],
+                        ];
+                        ?>
+                        <div class="row g-3">
+                            <?php foreach ($providers as $val => $p): ?>
+                            <div class="col-md-6 col-lg-3">
+                                <label class="d-block" style="cursor:pointer;">
+                                    <input type="radio" name="captcha_provider" value="<?= $val ?>"
+                                           class="d-none captcha-radio"
+                                           <?= $currentProvider === $val ? 'checked' : '' ?>>
+                                    <div class="p-3 border rounded-3 h-100 captcha-card <?= $currentProvider === $val ? 'border-success bg-success bg-opacity-5' : '' ?>"
+                                         style="transition:.2s;">
+                                        <i class="bi <?= $p['icon'] ?> fs-4 me-2" style="color:<?= $p['color'] ?>;"></i>
+                                        <span class="fw-semibold small"><?= $p['label'] ?></span>
+                                    </div>
+                                </label>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Site Key / Server URL -->
+                    <div class="col-md-6" id="captchaSiteKeyWrap">
+                        <label class="form-label fw-semibold" id="captchaSiteKeyLabel">Site Key</label>
+                        <input type="text" name="captcha_site_key" id="captchaSiteKey" class="form-control"
+                               value="<?= esc($captcha['captcha_site_key'] ?? '') ?>"
+                               placeholder="Masukkan site key / server URL">
+                        <small class="text-muted" id="captchaSiteKeyHelp">
+                            Untuk reCAPTCHA &amp; Turnstile: site key dari dashboard provider.<br>
+                            Untuk Self-Hosted: URL server captcha (mis. <code>https://captcha.example.com</code>).
+                        </small>
+                    </div>
+
+                    <!-- Secret Key -->
+                    <div class="col-md-6" id="captchaSecretKeyWrap">
+                        <label class="form-label fw-semibold">Secret Key</label>
+                        <div class="input-group">
+                            <input type="password" name="captcha_secret_key" id="captchaSecretKey" class="form-control"
+                                   value="<?= esc($captcha['captcha_secret_key'] ?? '') ?>"
+                                   placeholder="Masukkan secret key">
+                            <button class="btn btn-outline-secondary" type="button"
+                                    onclick="toggleField('captchaSecretKey','captchaSecretEye')">
+                                <i class="bi bi-eye" id="captchaSecretEye"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Digunakan server-side untuk verifikasi token captcha.</small>
+                    </div>
+
+                    <!-- Docs links -->
+                    <div class="col-12">
+                        <div class="alert alert-light border d-flex gap-3 align-items-start py-2 mb-0">
+                            <i class="bi bi-info-circle-fill text-info flex-shrink-0 mt-1"></i>
+                            <div class="small">
+                                <strong>Dokumen / Dashboard:</strong>
+                                <a href="https://www.google.com/recaptcha/admin" target="_blank" class="me-3">Google reCAPTCHA Admin</a>
+                                <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" class="me-3">Cloudflare Turnstile Dashboard</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-footer bg-transparent">
+                    <button type="submit" class="btn btn-success px-4"><i class="bi bi-save me-1"></i>Simpan Konfigurasi Captcha</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
 </div>
 
 <script>
@@ -364,12 +461,52 @@ function previewLogo(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
-function togglePass() {
-    const inp = document.getElementById('smtpPassInput');
-    const ico = document.getElementById('passEyeIcon');
+function toggleField(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const ico = document.getElementById(iconId);
     inp.type = inp.type === 'password' ? 'text' : 'password';
     ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
 }
+
+// Captcha provider card selection
+(function() {
+    const radios = document.querySelectorAll('.captcha-radio');
+    const cards  = document.querySelectorAll('.captcha-card');
+    const keyWrap = document.getElementById('captchaSiteKeyWrap');
+    const secWrap = document.getElementById('captchaSecretKeyWrap');
+
+    function refreshCaptchaUI() {
+        const checked = document.querySelector('.captcha-radio:checked');
+        const val = checked ? checked.value : 'none';
+
+        // Card active style
+        radios.forEach((r, i) => {
+            cards[i].classList.toggle('border-success', r.checked);
+            cards[i].classList.toggle('bg-success', r.checked);
+            cards[i].classList.toggle('bg-opacity-5', r.checked);
+        });
+
+        // Hide key fields when disabled or selfhosted (selfhosted needs no keys)
+        const hideAll  = (val === 'none');
+        const selfHost = (val === 'selfhosted');
+        keyWrap.style.display = (hideAll || selfHost) ? 'none' : '';
+        secWrap.style.display = (hideAll || selfHost) ? 'none' : '';
+
+        // Show info box for selfhosted
+        let infoBox = document.getElementById('selfhostedInfo');
+        if (!infoBox) {
+            infoBox = document.createElement('div');
+            infoBox.id = 'selfhostedInfo';
+            infoBox.className = 'col-12';
+            infoBox.innerHTML = '<div class="alert alert-success border d-flex gap-3 align-items-start py-2 mb-0"><i class="bi bi-check-circle-fill text-success flex-shrink-0 mt-1"></i><div class="small"><strong>Captcha Bawaan Aktif.</strong> Pengunjung akan diminta menjawab soal matematika sederhana. Tidak diperlukan API key atau konfigurasi tambahan.</div></div>';
+            keyWrap.parentNode.insertBefore(infoBox, keyWrap);
+        }
+        infoBox.style.display = selfHost ? '' : 'none';
+    }
+
+    radios.forEach(r => r.addEventListener('change', refreshCaptchaUI));
+    refreshCaptchaUI(); // initial state
+})();
 (function() {
     const hash = window.location.hash;
     if (hash) {

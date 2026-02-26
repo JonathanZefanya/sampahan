@@ -29,6 +29,7 @@ class SettingsController extends BaseController
             'map'        => $this->settingModel->getGroup('map'),
             'mail'       => $this->settingModel->getGroup('mail'),
             'general'    => $this->settingModel->getGroup('general'),
+            'captcha'    => $this->settingModel->getGroup('captcha'),
         ];
 
         return $this->render('layouts/admin', 'admin/settings', $data);
@@ -39,27 +40,32 @@ class SettingsController extends BaseController
      */
     public function save()
     {
-        // Whitelist of plain-text keys we accept via this form POST
-        $textKeys = [
-            // Appearance
-            'app_name', 'city_name',
-            // Map
-            'map_center_lat', 'map_center_long', 'map_default_zoom',
-            // Mail
-            'smtp_host', 'smtp_user', 'smtp_pass', 'smtp_port', 'smtp_crypto', 'smtp_from_name',
-            // General
-            'enable_email_verification', 'duplicate_radius_meters', 'app_timezone',
+        // Whitelist of plain-text keys grouped by their settings group
+        $groupedKeys = [
+            'appearance' => ['app_name', 'city_name'],
+            'map'        => ['map_center_lat', 'map_center_long', 'map_default_zoom'],
+            'mail'       => ['smtp_host', 'smtp_user', 'smtp_pass', 'smtp_port', 'smtp_crypto', 'smtp_from_name'],
+            'general'    => ['enable_email_verification', 'duplicate_radius_meters', 'app_timezone'],
+            'captcha'    => ['captcha_provider', 'captcha_site_key', 'captcha_secret_key'],
         ];
 
-        foreach ($textKeys as $key) {
-            $value = $this->request->getPost($key);
-            if ($value !== null) {
-                $this->settingModel->setValue($key, $value);
+        foreach ($groupedKeys as $group => $keys) {
+            foreach ($keys as $key) {
+                $value = $this->request->getPost($key);
+                if ($value !== null) {
+                    $this->settingModel->setValue($key, $value, $group);
+                }
             }
         }
 
+        // Self-hosted captcha needs no API keys — clear them to avoid confusion
+        if ($this->request->getPost('captcha_provider') === 'selfhosted') {
+            $this->settingModel->setValue('captcha_site_key',   '', 'captcha');
+            $this->settingModel->setValue('captcha_secret_key', '', 'captcha');
+        }
+
         $tab = $this->request->getPost('_tab') ?? '';
-        $hash = in_array($tab, ['#tab-appearance','#tab-map','#tab-mail','#tab-general'], true) ? $tab : '';
+        $hash = in_array($tab, ['#tab-appearance','#tab-map','#tab-mail','#tab-general','#tab-captcha'], true) ? $tab : '';
 
         return redirect()->to('/admin/settings' . $hash)->with('success', 'Pengaturan disimpan.');
     }

@@ -18,7 +18,8 @@ class ReportModel extends Model
     protected $table         = 'reports';
     protected $primaryKey    = 'id';
     protected $allowedFields = [
-        'user_id', 'latitude', 'longitude', 'photo_path',
+        'user_id', 'guest_name', 'guest_phone',
+        'latitude', 'longitude', 'photo_path',
         'description', 'status', 'admin_note',
         'is_recurrent_hotspot', 'rejection_reason',
         'created_at', 'updated_at',
@@ -158,9 +159,23 @@ class ReportModel extends Model
 
     // ─── Statistics ──────────────────────────────────────────────────────────
 
-    public function getStats(?int $userId = null): array
+    /**
+     * Get report statistics, optionally scoped by user, year, and/or month.
+     *
+     * @param  int|null    $userId  Scope to a specific user (masyarakat view)
+     * @param  string|null $year    e.g. '2025'
+     * @param  string|null $month   e.g. '03' (zero-padded, only used if $year is set)
+     */
+    public function getStats(?int $userId = null, ?string $year = null, ?string $month = null): array
     {
         $builder = $userId ? $this->where('user_id', $userId) : $this;
+
+        if ($year) {
+            $builder = (clone $builder)->where('YEAR(created_at)', $year);
+            if ($month) {
+                $builder = (clone $builder)->where('MONTH(created_at)', ltrim($month, '0') ?: '1');
+            }
+        }
 
         return [
             'total'       => (clone $builder)->countAllResults(),
@@ -171,6 +186,18 @@ class ReportModel extends Model
             'rejected'    => (clone $builder)->where('status', self::STATUS_REJECTED)->countAllResults(),
             'hotspots'    => (clone $builder)->where('is_recurrent_hotspot', 1)->countAllResults(),
         ];
+    }
+
+    /**
+     * Return list of years that have at least one report (for filter dropdowns).
+     */
+    public function getAvailableYears(): array
+    {
+        $rows = $this->db->query(
+            'SELECT DISTINCT YEAR(created_at) AS yr FROM reports ORDER BY yr DESC'
+        )->getResultArray();
+
+        return array_column($rows, 'yr');
     }
 
     /**

@@ -95,6 +95,19 @@
                     </a>
                 </li>
 
+                <?php
+                $cp = $settings['captcha_provider'] ?? 'none';
+                $captchaNavEnabled = ($cp !== 'none' && $cp !== '')
+                    && ($cp === 'selfhosted' || (!empty($settings['captcha_site_key']) && !empty($settings['captcha_secret_key'])));
+                if ($captchaNavEnabled): ?>
+                <li class="nav-item">
+                    <a class="nav-link-pub <?= str_contains(current_url(), 'laporkan-sampah') ? 'active' : '' ?> d-flex align-items-center gap-1 px-2"
+                       href="<?= base_url('laporkan-sampah') ?>" style="text-decoration: none;">
+                        <i class="bi bi-flag-fill"></i> Laporkan Sampah
+                    </a>
+                </li>
+                <?php endif; ?>
+
                 <!-- Divider (desktop only) -->
                 <li class="nav-item nav-divider d-none d-lg-block"></li>
 

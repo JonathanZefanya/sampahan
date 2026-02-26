@@ -11,6 +11,10 @@ $routes->get('/',              'Public\LandingController::index');
 $routes->get('peta-sebaran',   'Public\LandingController::map');
 $routes->get('api/reports/geojson', 'Public\LandingController::geojson');
 
+// Guest report (no auth required)
+$routes->get('laporkan-sampah',  'Public\GuestReportController::create');
+$routes->post('laporkan-sampah', 'Public\GuestReportController::store');
+
 // ── Authentication ────────────────────────────────────────────────────────────
 $routes->group('auth', function (RouteCollection $routes) {
     $routes->get('login',             'Auth\AuthController::login');
@@ -30,6 +34,7 @@ $routes->group('auth', function (RouteCollection $routes) {
 // ── Admin ─────────────────────────────────────────────────────────────────────
 $routes->group('admin', ['filter' => ['auth', 'role:admin']], function (RouteCollection $routes) {
     $routes->get('dashboard',               'Admin\DashboardController::index');
+    $routes->get('api/dashboard-stats',     'Admin\DashboardController::statsApi');
 
     // Settings
     $routes->get('settings',                'Admin\SettingsController::index');
@@ -61,6 +66,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function (RouteCol
 // ── Dinas ─────────────────────────────────────────────────────────────────────
 $routes->group('dinas', ['filter' => ['auth', 'role:dinas,admin']], function (RouteCollection $routes) {
     $routes->get('dashboard',                    'Dinas\DashboardController::index');
+    $routes->get('api/dashboard-stats',          'Dinas\DashboardController::statsApi');
     $routes->get('map',                          'Dinas\MapController::index');
     $routes->post('reports/(:num)/advance',      'Dinas\MapController::advance/$1');
     $routes->post('reports/(:num)/reject',       'Dinas\MapController::reject/$1');

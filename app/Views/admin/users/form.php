@@ -75,7 +75,7 @@ $roleBadge = ['admin'=>'dark','dinas'=>'success','masyarakat'=>'primary'];
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Peran (Role) <span class="text-danger">*</span></label>
                         <select name="role" class="form-select" required>
-                            <?php foreach (['admin' => 'Admin', 'dinas' => 'Dinas', 'masyarakat' => 'Masyarakat'] as $val => $lbl): ?>
+                            <?php foreach (['admin' => 'Pemerintah', 'dinas' => 'Dinas', 'masyarakat' => 'Masyarakat'] as $val => $lbl): ?>
                             <option value="<?= $val ?>"
                                     <?= old('role', $user['role'] ?? 'masyarakat') === $val ? 'selected' : '' ?>>
                                 <?= $lbl ?>
