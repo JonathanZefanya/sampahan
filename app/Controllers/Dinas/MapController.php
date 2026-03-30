@@ -32,8 +32,14 @@ class MapController extends BaseController
 
     public function geojson()
     {
-        $status     = $this->request->getGet('status');
-        $collection = $this->reportModel->toGeoJson($status ?: null);
+        $status = $this->request->getGet('status');
+
+        // Dinas should see pending + reviewed + in_progress + cleaned (no rejected)
+        $collection = $this->reportModel->toGeoJson(
+            $status ?: null,
+            true,   // includePending
+            false   // includeRejected
+        );
 
         return $this->response
             ->setContentType('application/json')

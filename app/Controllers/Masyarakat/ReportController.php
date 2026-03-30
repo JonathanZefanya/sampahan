@@ -36,6 +36,7 @@ class ReportController extends BaseController
             'mapLat'  => $this->setting('map_center_lat',  '-6.2884'),
             'mapLng'  => $this->setting('map_center_long', '106.7135'),
             'mapZoom' => $this->setting('map_default_zoom','12'),
+            'cityBoundaryGeoJson' => $this->setting('city_boundary_geojson', ''),
         ]);
     }
 
@@ -99,6 +100,8 @@ class ReportController extends BaseController
         }
 
         // ── 5. Persist report ────────────────────────────────────────────────
+        $isAnonymous = $this->request->getPost('is_anonymous') ? 1 : 0;
+
         $reportId = $this->reportModel->insert([
             'user_id'              => $this->authUser['id'],
             'latitude'             => $lat,
@@ -107,6 +110,7 @@ class ReportController extends BaseController
             'description'          => $this->request->getPost('description'),
             'status'               => ReportModel::STATUS_PENDING,
             'is_recurrent_hotspot' => (int) $isRecurrentHotspot,
+            'is_anonymous'         => $isAnonymous,
         ]);
 
         // Emit initial log entry

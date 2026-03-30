@@ -75,56 +75,47 @@ $extraHead = '
             </div>
         </form>
 
-        <form action="<?= base_url('admin/settings/upload-logo') ?>" method="POST" enctype="multipart/form-data" class="mb-4">
+        <form action="<?= base_url('admin/settings/upload-brand') ?>" method="POST" enctype="multipart/form-data" class="mb-4">
             <?= csrf_field() ?>
             <div class="card">
-                <div class="card-section-header"><i class="bi bi-image text-primary me-2"></i>Logo Aplikasi</div>
+                <div class="card-section-header"><i class="bi bi-image text-primary me-2"></i>Logo & Favicon</div>
                 <div class="card-body">
-                    <div class="d-flex align-items-center gap-4 mb-3">
-                        <img src="<?= base_url($settings['app_logo'] ?? 'uploads/logo.png') ?>"
-                             id="logoPreview" height="60" class="border rounded p-1 bg-white" alt="Logo">
-                        <div>
-                            <div class="fw-semibold">Logo Saat Ini</div>
-                            <small class="text-muted"><?= esc($settings['app_logo'] ?? 'uploads/logo.png') ?></small>
-                        </div>
-                    </div>
-                    <div class="row g-3 align-items-end">
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <label class="form-label">Logo Baru (PNG/JPG/WebP)</label>
-                            <input type="file" name="app_logo" class="form-control" accept="image/*" required
-                                   onchange="previewLogo(this)">
-                            <small class="text-muted">Rekomendasi: 200x60 px, background transparan.</small>
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex align-items-center gap-4 mb-3">
+                                    <img src="<?= base_url($settings['app_logo'] ?? 'uploads/logo.png') ?>"
+                                         id="logoPreview" height="60" class="border rounded p-1 bg-white" alt="Logo">
+                                    <div>
+                                        <div class="fw-semibold">Logo Saat Ini</div>
+                                        <small class="text-muted"><?= esc($settings['app_logo'] ?? 'uploads/logo.png') ?></small>
+                                    </div>
+                                </div>
+                                <label class="form-label">Logo Baru (PNG/JPG/WebP)</label>
+                                <input type="file" name="app_logo" class="form-control" accept="image/*" onchange="previewLogo(this)">
+                                <small class="text-muted">Rekomendasi: 200x60 px, background transparan.</small>
+                            </div>
                         </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Upload Logo</button>
+
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex align-items-center gap-4 mb-3">
+                                    <img src="<?= base_url($settings['app_favicon'] ?? 'uploads/favicon.ico') ?>"
+                                         height="32" class="border rounded p-1 bg-white" alt="Favicon">
+                                    <div>
+                                        <div class="fw-semibold">Favicon Saat Ini</div>
+                                        <small class="text-muted"><?= esc($settings['app_favicon'] ?? 'uploads/favicon.ico') ?></small>
+                                    </div>
+                                </div>
+                                <label class="form-label">Favicon Baru (ICO/PNG, 32x32 px)</label>
+                                <input type="file" name="app_favicon" class="form-control" accept="image/*">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </form>
 
-        <form action="<?= base_url('admin/settings/upload-favicon') ?>" method="POST" enctype="multipart/form-data">
-            <?= csrf_field() ?>
-            <div class="card">
-                <div class="card-section-header"><i class="bi bi-badge-cc text-info me-2"></i>Favicon</div>
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-4 mb-3">
-                        <img src="<?= base_url($settings['app_favicon'] ?? 'uploads/favicon.ico') ?>"
-                             height="32" class="border rounded p-1 bg-white" alt="Favicon">
-                        <div>
-                            <div class="fw-semibold">Favicon Saat Ini</div>
-                            <small class="text-muted"><?= esc($settings['app_favicon'] ?? 'uploads/favicon.ico') ?></small>
-                        </div>
-                    </div>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-6">
-                            <label class="form-label">Favicon Baru (ICO/PNG, 32x32 px)</label>
-                            <input type="file" name="app_favicon" class="form-control" accept="image/*" required>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Upload Favicon</button>
-                        </div>
-                    </div>
+                <div class="card-footer bg-transparent text-end">
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-upload me-1"></i>Upload Logo & Favicon</button>
                 </div>
             </div>
         </form>

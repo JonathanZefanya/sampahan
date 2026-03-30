@@ -42,11 +42,21 @@
                           placeholder="Contoh: Tumpukan sampah di depan gang 5..."></textarea>
             </div>
 
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" value="1" id="isAnonymous" name="is_anonymous">
+                <label class="form-check-label" for="isAnonymous">
+                    Laporkan sebagai <strong>Anonymous</strong>
+                </label>
+            </div>
+
             <button type="submit" class="btn btn-success btn-xlg w-100" id="btnSubmit" disabled>
                 <i class="bi bi-send-fill me-2"></i>Kirim Laporan
             </button>
             <p id="gpsWarning" class="text-danger small mt-2 text-center">
                 Menunggu GPS... Izinkan akses lokasi di browser Anda.
+            </p>
+            <p id="boundaryWarning" class="text-danger small mt-2 text-center" style="display:none;">
+                Lokasi terdeteksi di luar wilayah yang dikelola.
             </p>
         </form>
     </div>
@@ -62,14 +72,84 @@
 const pickMap    = L.map('pickMap').setView([<?= $mapLat ?>, <?= $mapLng ?>], <?= $mapZoom ?>);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(pickMap);
 
+const cityBoundaryGeoJson = <?= json_encode(empty($cityBoundaryGeoJson) ? null : json_decode($cityBoundaryGeoJson, true), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+
 let userMarker = null;
+
+function pointInPolygon(lng, lat, polygon) {
+    // GeoJSON coordinates: [lng, lat]
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i][0], yi = polygon[i][1];
+        const xj = polygon[j][0], yj = polygon[j][1];
+
+        const intersect = ((yi > lat) !== (yj > lat)) &&
+            (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+function isInsideBoundary(lat, lng) {
+    if (!cityBoundaryGeoJson) {
+        return true;
+    }
+
+    const type = cityBoundaryGeoJson.type;
+
+    if (type === 'FeatureCollection') {
+        for (const feature of cityBoundaryGeoJson.features || []) {
+            if (isInsideBoundaryGeo(feature.geometry, lat, lng)) return true;
+        }
+        return false;
+    }
+
+    if (type === 'Feature') {
+        return isInsideBoundaryGeo(cityBoundaryGeoJson.geometry, lat, lng);
+    }
+
+    return isInsideBoundaryGeo(cityBoundaryGeoJson, lat, lng);
+}
+
+function isInsideBoundaryGeo(geo, lat, lng) {
+    if (!geo) return true;
+
+    if (geo.type === 'Polygon') {
+        for (const ring of geo.coordinates) {
+            if (pointInPolygon(lat, lng, ring)) return true;
+        }
+        return false;
+    }
+
+    if (geo.type === 'MultiPolygon') {
+        for (const polygon of geo.coordinates) {
+            for (const ring of polygon) {
+                if (pointInPolygon(lat, lng, ring)) return true;
+            }
+        }
+        return false;
+    }
+
+    return true;
+}
 
 function setLocation(lat, lng) {
     document.getElementById('lat').value = lat;
     document.getElementById('lng').value = lng;
     document.getElementById('coordDisplay').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     document.getElementById('gpsWarning').style.display = 'none';
-    document.getElementById('btnSubmit').disabled = false;
+
+    const withinBoundary = isInsideBoundary(lat, lng);
+    const boundaryWarning = document.getElementById('boundaryWarning');
+    const submitBtn = document.getElementById('btnSubmit');
+
+    if (!withinBoundary) {
+        boundaryWarning.style.display = 'block';
+        submitBtn.disabled = true;
+    } else {
+        boundaryWarning.style.display = 'none';
+        submitBtn.disabled = false;
+    }
 
     if (userMarker) pickMap.removeLayer(userMarker);
     userMarker = L.marker([lat, lng]).addTo(pickMap);

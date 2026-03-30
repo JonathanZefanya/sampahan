@@ -308,12 +308,12 @@ $extraStyle = '
                 <span class="section-pill">Keunggulan</span>
                 <h2 class="fw-bold mt-1 mb-4">Mengapa <?= esc($appName) ?>?</h2>
                 <?php $features = [
-                    ['icon'=>'bi-geo-alt-fill',       'color'=>'#16a34a','title'=>'Validasi Batas Wilayah',    'desc'=>'Laporan divalidasi masuk wilayah kota menggunakan algoritma point-in-polygon GeoJSON.'],
-                    ['icon'=>'bi-shield-check-fill',  'color'=>'#2563eb','title'=>'Deteksi Duplikasi 10 Meter','desc'=>'Sistem mencegah laporan ganda dalam radius 10 m untuk efisiensi penanganan di lapangan.'],
+                    // ['icon'=>'bi-geo-alt-fill',       'color'=>'#16a34a','title'=>'Validasi Batas Wilayah',    'desc'=>'Laporan divalidasi masuk wilayah kota menggunakan algoritma point-in-polygon GeoJSON.'],
+                    ['icon'=>'bi bi-shield-fill-check',  'color'=>'#2563eb','title'=>'Deteksi Duplikasi 10 Meter','desc'=>'Sistem mencegah laporan ganda dalam radius 10 m untuk efisiensi penanganan di lapangan.'],
                     ['icon'=>'bi-fire',               'color'=>'#ea580c','title'=>'Pendeteksi Hotspot',        'desc'=>'Area berulang kali dilaporkan ditandai sebagai hotspot prioritas secara otomatis.'],
                     ['icon'=>'bi-envelope-check-fill','color'=>'#7c3aed','title'=>'Notifikasi Email Otomatis', 'desc'=>'Pelapor mendapat email konfirmasi & pemberitahuan saat laporan selesai ditangani.'],
                     ['icon'=>'bi-phone-fill',         'color'=>'#0891b2','title'=>'Mobile-First & GPS Otomatis','desc'=>'Tombol besar, GPS satu sentuh  dirancang ramah untuk pengguna lanjut usia.'],
-                    ['icon'=>'bi-gear-fill',          'color'=>'#374151','title'=>'White-Label Penuh',          'desc'=>'Logo, kota, SMTP, & batas GIS dikonfigurasi via Admin panel  tanpa perlu coding.'],
+                    // ['icon'=>'bi-gear-fill',          'color'=>'#374151','title'=>'White-Label Penuh',          'desc'=>'Logo, kota, SMTP, & batas GIS dikonfigurasi via Admin panel  tanpa perlu coding.'],
                 ];
                 foreach ($features as $f): ?>
                 <div class="feature-item d-flex gap-3 mb-3 p-3 rounded-3 bg-white">

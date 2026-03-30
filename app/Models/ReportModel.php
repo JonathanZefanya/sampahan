@@ -21,7 +21,7 @@ class ReportModel extends Model
         'user_id', 'guest_name', 'guest_phone',
         'latitude', 'longitude', 'photo_path',
         'description', 'status', 'admin_note',
-        'is_recurrent_hotspot', 'rejection_reason',
+        'is_recurrent_hotspot', 'is_anonymous', 'rejection_reason',
         'created_at', 'updated_at',
     ];
     protected $useTimestamps = true;
@@ -204,23 +204,32 @@ class ReportModel extends Model
      * Return all active (non-rejected, non-cleaned) reports as lightweight GeoJSON
      * FeatureCollection for Leaflet rendering.
      */
-    public function toGeoJson(?string $status = null): array
+    public function toGeoJson(?string $status = null, bool $includePending = false, bool $includeRejected = false): array
     {
-        // `pending` and `rejected` reports are never shown on the public map.
-        $hidden = [self::STATUS_PENDING, self::STATUS_REJECTED];
-
         $q = $this->select('reports.id, reports.latitude, reports.longitude,
                             reports.status, reports.description,
                             reports.created_at, reports.is_recurrent_hotspot,
+                            reports.is_anonymous,
                             users.name AS reporter_name')
-                  ->join('users', 'users.id = reports.user_id', 'left')
-                  ->whereNotIn('reports.status', $hidden);
+                  ->join('users', 'users.id = reports.user_id', 'left');
 
-        if ($status && ! in_array($status, $hidden, true)) {
-            $q = $q->where('reports.status', $status);
+        if ($status) {
+            $q->where('reports.status', $status);
+        } else {
+            $hidden = [];
+            if (! $includePending) {
+                $hidden[] = self::STATUS_PENDING;
+            }
+            if (! $includeRejected) {
+                $hidden[] = self::STATUS_REJECTED;
+            }
+
+            if (! empty($hidden)) {
+                $q->whereNotIn('reports.status', $hidden);
+            }
         }
 
-        $rows     = $q->findAll();
+        $rows = $q->findAll();
         $features = [];
 
         foreach ($rows as $row) {
@@ -234,7 +243,7 @@ class ReportModel extends Model
                     'id'           => $row['id'],
                     'status'       => $row['status'],
                     'description'  => $row['description'],
-                    'reporter'     => $row['reporter_name'],
+                    'reporter'     => ($row['is_anonymous'] ? 'Anonymous' : ($row['reporter_name'] ?? 'Unknown')),
                     'created_at'   => $row['created_at'],
                     'is_hotspot'   => (bool) $row['is_recurrent_hotspot'],
                 ],

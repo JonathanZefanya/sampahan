@@ -191,7 +191,9 @@ function openReportPanel(reportId) {
         }
 
         // Build avatar initials
-        const nm       = r.reporter_name || '?';
+        const nm = (r.is_anonymous && +r.is_anonymous === 1)
+            ? 'Anonymous'
+            : (r.reporter_name || '?');
         const avatarColors = ['#2563eb','#16a34a','#ca8a04','#0891b2','#dc2626','#7c3aed'];
         const avatarBg = avatarColors[nm.charCodeAt(0) % avatarColors.length];
         const initial  = nm.charAt(0).toUpperCase();

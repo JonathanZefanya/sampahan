@@ -12,7 +12,14 @@ $sidebarNav = '
 </a>
 <a href="' . base_url('masyarakat/profile') . '" class="nav-link ' . (service('uri')->getSegment(2) === 'profile' ? 'active' : '') . '">
     <i class="bi bi-person-circle"></i> Profil Saya
-</a>
-';
+</a>';
+
+if (session()->get('is_impersonating')) {
+    $sidebarNav .= '
+<hr class="my-2" style="border-color: rgba(255,255,255,0.1);">
+<a href="' . base_url('exit-impersonation') . '" class="nav-link text-warning">
+    <i class="bi bi-shield-lock"></i> Keluar ke Admin
+</a>';
+}
 
 echo view('layouts/_base', array_merge(get_defined_vars(), ['sidebarNav' => $sidebarNav]));

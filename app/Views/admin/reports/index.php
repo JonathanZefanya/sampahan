@@ -119,7 +119,7 @@ $statCards = [
                 <?php else: ?>
                     <?php foreach ($reports as $r):
                         $sc = $statusConfig[$r['status']] ?? ['badge' => 'bg-secondary', 'label' => $r['status'], 'ic' => '#6b7280'];
-                        $nm = $r['reporter_name'] ?? '–';
+                        $nm = ($r['is_anonymous'] ?? 0) ? 'Anonymous' : ($r['reporter_name'] ?? '–');
                         $colors = ['#2563eb','#16a34a','#ca8a04','#0891b2','#dc2626','#7c3aed'];
                         $avatarBg = $colors[ord($nm[0] ?? 'A') % count($colors)];
                     ?>

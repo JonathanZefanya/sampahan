@@ -112,6 +112,13 @@ $totalUsers = count($users ?? []);
                                     <i class="bi bi-person-<?= $u['is_active'] ? 'x' : 'check' ?>"></i>
                                     <span class="d-none d-xl-inline"><?= $u['is_active'] ? ' Nonaktifkan' : ' Aktifkan' ?></span>
                                 </button>
+                                <?php if ($u['is_active']): ?>
+                                <a href="<?= base_url('admin/users/' . $u['id'] . '/impersonate') ?>"
+                                   class="btn btn-sm btn-outline-info" title="Login Sebagai User Ini">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                    <span class="d-none d-xl-inline"> Login</span>
+                                </a>
+                                <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </td>

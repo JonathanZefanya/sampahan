@@ -66,7 +66,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public array|string $scriptSrcElem = 'self';
+    public array|string $scriptSrcElem = ['self', 'unpkg.com'];
 
     /**
      * Specifies valid sources for JavaScript inline event
@@ -88,7 +88,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public array|string $styleSrcElem = 'self';
+    public array|string $styleSrcElem = ['self', 'unpkg.com'];
 
     /**
      * Specifies valid sources for stylesheets inline
@@ -103,7 +103,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string
      */
-    public $imageSrc = 'self';
+    public $imageSrc = ['self', 'tile.openstreetmap.org', 'fonts.googleapis.com'];
 
     /**
      * Restricts the URLs that can appear in a page's `<base>` element.

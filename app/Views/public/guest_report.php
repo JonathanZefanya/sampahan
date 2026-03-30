@@ -77,7 +77,7 @@ $extraStyle = '
                         </div>
 
                         <!-- Map -->
-                        <div id="map" class="mb-3"></div>
+                        <div id="map" class="mb-3" style="height:380px;min-height:200px;"></div>
 
                         <!-- Hidden coordinate inputs -->
                         <input type="hidden" name="latitude"  id="latInput"  value="<?= old('latitude') ?>">

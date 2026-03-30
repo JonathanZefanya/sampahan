@@ -14,13 +14,16 @@ class DashboardController extends BaseController
         return $this->render('layouts/dinas', 'dinas/dashboard', [
             'stats'          => $reportModel->getStats(),
             'availableYears' => $reportModel->getAvailableYears(),
-            'recentReports'  => $reportModel
+            'recentReports'  => array_map(fn($r) => [
+                    ...$r,
+                    'reporter_name' => ($r['is_anonymous'] ?? 0) ? 'Anonymous' : ($r['reporter_name'] ?? '–'),
+                ], $reportModel
                 ->select('reports.*, users.name AS reporter_name')
                 ->join('users', 'users.id = reports.user_id', 'left')
                 ->whereIn('status', [ReportModel::STATUS_PENDING, ReportModel::STATUS_REVIEWED, ReportModel::STATUS_IN_PROGRESS])
                 ->orderBy('created_at', 'DESC')
                 ->limit(8)
-                ->findAll(),
+                ->findAll()),
         ]);
     }
 
@@ -58,7 +61,7 @@ class DashboardController extends BaseController
 
         $recentReports = array_map(fn($r) => [
             'id'            => $r['id'],
-            'reporter_name' => $r['reporter_name'] ?? '–',
+            'reporter_name' => ($r['is_anonymous'] ?? 0) ? 'Anonymous' : ($r['reporter_name'] ?? '–'),
             'status'        => $r['status'],
             'created_at'    => date('d M Y H:i', strtotime($r['created_at'])),
         ], $builder->findAll());

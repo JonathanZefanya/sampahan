@@ -126,4 +126,74 @@ class UserController extends BaseController
 
         return $this->jsonSuccess(['is_active' => ! $user['is_active']], $msg);
     }
+
+    /**
+     * Impersonate a user by temporarily switching their session.
+     * Stores original admin session for later restoration.
+     */
+    public function impersonate(int $id)
+    {
+        $user = $this->userModel->find($id);
+        if (! $user) {
+            return redirect()->to('/admin/users')->with('error', 'User tidak ditemukan.');
+        }
+
+        if (! $user['is_active']) {
+            return redirect()->to('/admin/users')->with('error', 'Tidak bisa impersonate user yang nonaktif.');
+        }
+
+        // Store original admin session
+        session()->set('impersonation_original', [
+            'id'        => $this->authUser['id'],
+            'name'      => $this->authUser['name'],
+            'email'     => $this->authUser['email'],
+            'role'      => $this->authUser['role'],
+            'is_active' => $this->authUser['is_active'],
+        ]);
+
+        session()->set('is_impersonating', true);
+
+        // Switch to impersonated user session
+        session()->set('user', [
+            'id'        => $user['id'],
+            'name'      => $user['name'],
+            'email'     => $user['email'],
+            'role'      => $user['role'],
+            'is_active' => $user['is_active'],
+        ]);
+
+        $dashUrl = $this->getDashboardByRole($user['role']);
+        return redirect()->to($dashUrl)->with('info', "Anda sekarang login sebagai {$user['name']}");
+    }
+
+    /**
+     * Exit impersonation and restore original admin session.
+     */
+    public function exitImpersonation()
+    {
+        $original = session()->get('impersonation_original');
+        if (! $original) {
+            return redirect()->to('/admin/dashboard')->with('error', 'Tidak ada session impersonation aktif.');
+        }
+
+        // Restore original admin session
+        session()->set('user', $original);
+        session()->remove('impersonation_original');
+        session()->remove('is_impersonating');
+
+        return redirect()->to('/admin/dashboard')->with('success', "Anda telah kembali ke akun admin.");
+    }
+
+    /**
+     * Helper to get dashboard URL by role
+     */
+    private function getDashboardByRole(string $role): string
+    {
+        return match ($role) {
+            'admin'      => '/admin/dashboard',
+            'dinas'      => '/dinas/dashboard',
+            'masyarakat' => '/masyarakat/dashboard',
+            default      => '/masyarakat/dashboard',
+        };
+    }
 }

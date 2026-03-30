@@ -111,6 +111,40 @@
                 <!-- Divider (desktop only) -->
                 <li class="nav-item nav-divider d-none d-lg-block"></li>
 
+                <?php if (!empty($authUser) && isset($authUser['name'])): ?>
+                <li class="nav-item dropdown">
+                    <?php 
+                        $isImpersonating = session()->get('is_impersonating');
+                        $displayName = $authUser['name'];
+                        if ($isImpersonating) {
+                            $displayName = '<i class="bi bi-shield-check me-1"></i>' . esc($authUser['name']);
+                        }
+                    ?>
+                    <button class="btn btn-outline-primary btn-nav-register d-inline-flex align-items-center gap-1 dropdown-toggle"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> <?= $isImpersonating ? $displayName : esc($authUser['name']) ?>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <?php
+                        $role = $authUser['role'] ?? 'masyarakat';
+                        $profileUrl = match($role) {
+                            'admin'     => base_url('admin/profile'),
+                            'dinas'     => base_url('dinas/profile'),
+                            'masyarakat' => base_url('masyarakat/profile'),
+                            default     => base_url('masyarakat/profile')
+                        };
+                        ?>
+                        <li><a class="dropdown-item" href="<?= $profileUrl ?>"><i class="bi bi-person me-1"></i> Profil</a></li>
+                        <?php if ($isImpersonating): ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-warning" href="<?= base_url('auth/logout') ?>"><i class="bi bi-box-arrow-right me-1"></i> Logout</a></li>
+                        <li><a class="dropdown-item text-info" href="<?= base_url('exit-impersonation') ?>"><i class="bi bi-door-open me-1"></i> Keluar ke Admin</a></li>
+                        <?php else: ?>
+                        <li><a class="dropdown-item" href="<?= base_url('auth/logout') ?>"><i class="bi bi-box-arrow-right me-1"></i> Logout</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </li>
+                <?php else: ?>
                 <li class="nav-item">
                     <a class="btn btn-success btn-nav-login d-inline-flex align-items-center gap-1"
                        href="<?= base_url('auth/login') ?>">
@@ -124,6 +158,7 @@
                         <i class="bi bi-person-plus"></i> Daftar
                     </a>
                 </li>
+                <?php endif; ?>
 
             </ul>
         </div>
@@ -158,7 +193,7 @@
             <div class="col-md-5">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <img src="<?= base_url($settings['app_logo'] ?? 'uploads/logo.png') ?>" height="32"
-                         alt="<?= esc($settings['app_name'] ?? 'SAMPAHAN') ?>" style="opacity:.85;filter:brightness(10)">
+                         alt="<?= esc($settings['app_name'] ?? 'SAMPAHAN') ?>">
                     <span class="fw-bold fs-5 text-white"><?= esc($settings['app_name'] ?? 'SAMPAHAN') ?></span>
                 </div>
                 <p class="mb-0" style="color:#94a3b8;font-size:.87rem;">

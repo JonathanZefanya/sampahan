@@ -31,6 +31,9 @@ $routes->group('auth', function (RouteCollection $routes) {
     $routes->post('reset-password/(:segment)',  'Auth\ForgotPasswordController::update/$1');
 });
 
+// ── Impersonation (requires auth only, not role-specific) ─────────────────────
+$routes->get('exit-impersonation', 'Admin\UserController::exitImpersonation', ['filter' => 'auth']);
+
 // ── Admin ─────────────────────────────────────────────────────────────────────
 $routes->group('admin', ['filter' => ['auth', 'role:admin']], function (RouteCollection $routes) {
     $routes->get('dashboard',               'Admin\DashboardController::index');
@@ -39,6 +42,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function (RouteCol
     // Settings
     $routes->get('settings',                'Admin\SettingsController::index');
     $routes->post('settings',               'Admin\SettingsController::save');
+    $routes->post('settings/upload-brand',  'Admin\SettingsController::uploadBrand');
     $routes->post('settings/upload-logo',   'Admin\SettingsController::uploadLogo');
     $routes->post('settings/upload-favicon','Admin\SettingsController::uploadFavicon');
     $routes->post('settings/upload-geojson','Admin\SettingsController::uploadGeoJson');
@@ -57,6 +61,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function (RouteCol
     $routes->get('users/(:num)/edit',       'Admin\UserController::edit/$1');
     $routes->post('users/(:num)',           'Admin\UserController::update/$1');
     $routes->post('users/(:num)/toggle',    'Admin\UserController::toggle/$1');
+    $routes->get('users/(:num)/impersonate', 'Admin\UserController::impersonate/$1');
 
     // Profile
     $routes->get('profile',                 'Admin\ProfileController::index');
@@ -64,7 +69,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function (RouteCol
 });
 
 // ── Dinas ─────────────────────────────────────────────────────────────────────
-$routes->group('dinas', ['filter' => ['auth', 'role:dinas,admin']], function (RouteCollection $routes) {
+$routes->group('dinas', ['filter' => ['auth', 'role:dinas']], function (RouteCollection $routes) {
     $routes->get('dashboard',                    'Dinas\DashboardController::index');
     $routes->get('api/dashboard-stats',          'Dinas\DashboardController::statsApi');
     $routes->get('map',                          'Dinas\MapController::index');
@@ -77,7 +82,7 @@ $routes->group('dinas', ['filter' => ['auth', 'role:dinas,admin']], function (Ro
 });
 
 // ── Masyarakat ────────────────────────────────────────────────────────────────
-$routes->group('masyarakat', ['filter' => ['auth', 'role:masyarakat,admin']], function (RouteCollection $routes) {
+$routes->group('masyarakat', ['filter' => ['auth', 'role:masyarakat']], function (RouteCollection $routes) {
     $routes->get('dashboard',           'Masyarakat\DashboardController::index');
     $routes->get('report',              'Masyarakat\ReportController::create');
     $routes->post('report',             'Masyarakat\ReportController::store');

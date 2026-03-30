@@ -71,23 +71,59 @@ class SettingsController extends BaseController
     }
 
     /**
+     * Upload & replace App Logo and/or Favicon in a single form.
+     */
+    public function uploadBrand()
+    {
+        $logoFile    = $this->request->getFile('app_logo');
+        $faviconFile = $this->request->getFile('app_favicon');
+
+        if ((! $logoFile || ! $logoFile->isValid()) && (! $faviconFile || ! $faviconFile->isValid())) {
+            return redirect()->to('/admin/settings#tab-appearance')->with('error', 'Pilih setidaknya logo atau favicon yang valid untuk diunggah.');
+        }
+
+        $messages = [];
+        $errors   = [];
+
+        if ($logoFile && $logoFile->isValid()) {
+            $upload = $this->handleUpload('app_logo', 'brand');
+
+            if (! $upload) {
+                $errors[] = 'Upload logo gagal. Pastikan file adalah gambar valid.';
+            } else {
+                $oldPath = $this->settingModel->get('app_logo');
+                $this->deleteOldFile($oldPath, ['uploads/logo.png']);
+                $this->settingModel->setValue('app_logo', $upload['path'], 'appearance');
+                $messages[] = 'Logo berhasil diperbarui.';
+            }
+        }
+
+        if ($faviconFile && $faviconFile->isValid()) {
+            $upload = $this->handleUpload('app_favicon', 'brand');
+
+            if (! $upload) {
+                $errors[] = 'Upload favicon gagal. Pastikan file adalah gambar valid.';
+            } else {
+                $oldPath = $this->settingModel->get('app_favicon');
+                $this->deleteOldFile($oldPath, ['uploads/favicon.ico']);
+                $this->settingModel->setValue('app_favicon', $upload['path'], 'appearance');
+                $messages[] = 'Favicon berhasil diperbarui.';
+            }
+        }
+
+        if (! empty($errors)) {
+            return redirect()->to('/admin/settings#tab-appearance')->with('error', implode(' ', $errors));
+        }
+
+        return redirect()->to('/admin/settings#tab-appearance')->with('success', implode(' ', $messages));
+    }
+
+    /**
      * Upload & replace App Logo.
      */
     public function uploadLogo()
     {
-        $upload = $this->handleUpload('app_logo', 'brand');
-
-        if (! $upload) {
-            return redirect()->to('/admin/settings#tab-appearance')->with('error', 'Upload logo gagal. Pastikan file adalah gambar valid.');
-        }
-
-        // Delete old logo file if different from default
-        $oldPath = $this->settingModel->get('app_logo');
-        $this->deleteOldFile($oldPath, ['uploads/logo.png']);
-
-        $this->settingModel->setValue('app_logo', $upload['path'], 'appearance');
-
-        return redirect()->to('/admin/settings#tab-appearance')->with('success', 'Logo berhasil diperbarui.');
+        return $this->uploadBrand();
     }
 
     /**
@@ -95,18 +131,7 @@ class SettingsController extends BaseController
      */
     public function uploadFavicon()
     {
-        $upload = $this->handleUpload('app_favicon', 'brand');
-
-        if (! $upload) {
-            return redirect()->to('/admin/settings#tab-appearance')->with('error', 'Upload favicon gagal.');
-        }
-
-        $oldPath = $this->settingModel->get('app_favicon');
-        $this->deleteOldFile($oldPath, ['uploads/favicon.ico']);
-
-        $this->settingModel->setValue('app_favicon', $upload['path'], 'appearance');
-
-        return redirect()->to('/admin/settings#tab-appearance')->with('success', 'Favicon berhasil diperbarui.');
+        return $this->uploadBrand();
     }
 
     /**
