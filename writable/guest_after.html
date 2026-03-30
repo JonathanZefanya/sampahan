@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMPAHAN – Sistem Informasi Pengelolaan Sampah</title>
+    <link rel="icon" href="http://localhost:8080/uploads/brand/1774860080_0b50377439cbd079044a.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --sph-primary: #198754;
+            --sph-dark:    #1a2e40;
+            --sph-accent:  #20c997;
+        }
+        * { scroll-behavior: smooth; }
+        html { background: var(--sph-dark); } /* prevents white flash/gap between dark sections on mobile */
+        body { font-family: 'Poppins', sans-serif; font-size: 1rem; color: #2d3748; background: #fff; }
+        h1,h2,h3,h4,h5,h6 { font-family: 'Poppins', sans-serif; font-weight: 700; }
+        .navbar-brand img { height: 38px; object-fit: contain; }
+        .navbar { transition: box-shadow .3s, background .3s; }
+        .navbar.scrolled { box-shadow: 0 4px 20px rgba(0,0,0,.12) !important; }
+        .card { border: none; border-radius: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); transition: transform .25s, box-shadow .25s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.10); }
+        #map { height: 500px; border-radius: 1rem; }
+        footer { background: var(--sph-dark); color: #c8d6e5; }
+
+        /* ── Navbar ── */
+        .sph-navbar { background: rgba(255,255,255,.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,.07) !important; transition: box-shadow .3s, background .3s; }
+        .sph-navbar.scrolled { box-shadow: 0 4px 20px rgba(0,0,0,.10) !important; }
+        .sph-navbar .navbar-brand .brand-icon { width: 36px; height: 36px; background: linear-gradient(135deg,#198754,#20c997); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .sph-navbar .navbar-brand .brand-name { font-weight: 800; font-size: 1.1rem; color: #1a2e40; letter-spacing: -.01em; }
+        .sph-navbar .nav-link-pub { position: relative; font-weight: 500; color: #4a5568 !important; padding: .45rem .65rem !important; font-size: .92rem; transition: color .2s; }
+        .sph-navbar .nav-link-pub::after { content: ''; position: absolute; bottom: 0; left: .65rem; right: .65rem; height: 2.5px; border-radius: 2px; background: var(--sph-primary); transform: scaleX(0); transform-origin: center; transition: transform .25s ease; }
+        .sph-navbar .nav-link-pub:hover { color: var(--sph-primary) !important; }
+        .sph-navbar .nav-link-pub:hover::after { transform: scaleX(1); }
+        .sph-navbar .nav-link-pub.active { color: var(--sph-primary) !important; font-weight: 600; }
+        .sph-navbar .nav-link-pub.active::after { transform: scaleX(1); }
+        .sph-navbar .btn-nav-login { font-size: .85rem; font-weight: 600; padding: .38rem 1.1rem; border-radius: 8px; }
+        .sph-navbar .btn-nav-register { font-size: .85rem; font-weight: 600; padding: .38rem 1.1rem; border-radius: 8px; }
+        .sph-navbar .nav-divider { width: 1px; height: 22px; background: #e2e8f0; margin: 0 4px; align-self: center; }
+        @media (max-width: 991.98px) {
+            .sph-navbar .nav-divider { display: none; }
+            .sph-navbar .btn-nav-login, .sph-navbar .btn-nav-register { width: 100%; text-align: center; margin-top: .25rem; }
+            .sph-navbar .nav-link-pub::after { display: none; }
+            .sph-navbar .nav-link-pub.active { background: rgba(25,135,84,.07); border-radius: 8px; }
+        }
+        
+#map { height: 380px; border-radius: .75rem; border: 1px solid #dee2e6; }
+.leaflet-container { border-radius: .75rem; }
+.loc-badge { background:#e8f5e9; color:#198754; border-radius:999px; padding:.25rem .75rem; font-size:.8rem; font-weight:600; }
+.loc-badge.no-loc { background:#fff3cd; color:#856404; }
+.form-card { border-radius:1rem; border:1px solid #e2e8f0; background:#fff; padding:2rem; box-shadow:0 4px 24px rgba(0,0,0,.06); }
+    </style>
+    
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sph-navbar sticky-top" id="mainNavbar">
+    <div class="container">
+
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="http://localhost:8080/">
+                            <img src="http://localhost:8080/uploads/brand/1774860080_65e6100b1ae666ce6495.png"
+                     alt="SAMPAHAN" style="height:36px;object-fit:contain;">
+                        <span class="brand-name">SAMPAHAN</span>
+        </a>
+
+        <!-- Mobile toggler -->
+        <button class="navbar-toggler border-0 shadow-none" type="button"
+                data-bs-toggle="collapse" data-bs-target="#publicNav" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Nav links -->
+        <div class="collapse navbar-collapse" id="publicNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1 py-2 py-lg-0">
+
+                <li class="nav-item">
+                    <a class="nav-link-pub  d-flex align-items-center gap-1 px-2"
+                       href="http://localhost:8080/" style="text-decoration: none;">
+                        <i class="bi bi-house"></i> Beranda
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link-pub  d-flex align-items-center gap-1 px-2"
+                       href="http://localhost:8080/peta-sebaran" style="text-decoration: none;">
+                        <i class="bi bi-map"></i> Peta Sebaran
+                    </a>
+                </li>
+
+                                <li class="nav-item">
+                    <a class="nav-link-pub active d-flex align-items-center gap-1 px-2"
+                       href="http://localhost:8080/laporkan-sampah" style="text-decoration: none;">
+                        <i class="bi bi-flag-fill"></i> Laporkan Sampah
+                    </a>
+                </li>
+                
+                <!-- Divider (desktop only) -->
+                <li class="nav-item nav-divider d-none d-lg-block"></li>
+
+                                <li class="nav-item">
+                    <a class="btn btn-success btn-nav-login d-inline-flex align-items-center gap-1"
+                       href="http://localhost:8080/auth/login">
+                        <i class="bi bi-box-arrow-in-right"></i> Masuk
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="btn btn-outline-success btn-nav-register d-inline-flex align-items-center gap-1"
+                       href="http://localhost:8080/auth/register">
+                        <i class="bi bi-person-plus"></i> Daftar
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Flash messages -->
+<div class="container mt-3">
+            <div class="alert alert-success alert-dismissible fade show">
+            Terima kasih! Laporan sampah Anda berhasil dikirim dan akan segera ditangani.            <button class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        </div>
+
+<!-- Page content -->
+
+<section class="py-5" style="background:linear-gradient(135deg,#f0fdf4 0%,#eff6ff 100%);min-height:calc(100vh - 72px);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <span class="badge bg-success mb-2" style="border-radius:999px;padding:.4rem 1rem;font-size:.8rem;letter-spacing:.5px;text-transform:uppercase;">
+                        <i class="bi bi-flag-fill me-1"></i> Laporkan Sampah
+                    </span>
+                    <h2 class="fw-bold mb-1">Laporkan Sampah di Sekitar Anda</h2>
+                    <p class="text-muted">Wilayah Kota Jakarta Pusat &mdash; Tidak perlu akun, laporan Anda langsung diterima.</p>
+                </div>
+
+                <!-- Flash messages -->
+                                <div class="alert alert-success alert-dismissible d-flex gap-2 align-items-center mb-4" role="alert">
+                    <i class="bi bi-check-circle-fill flex-shrink-0"></i>
+                    <div>Terima kasih! Laporan sampah Anda berhasil dikirim dan akan segera ditangani.</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                
+                
+                <form action="http://localhost:8080/laporkan-sampah" method="POST"
+                      enctype="multipart/form-data" id="guestReportForm" novalidate>
+                    <input type="hidden" name="csrf_test_name" value="14c39829f093f8fe50031d45db54ecb9">
+                    <div class="form-card mb-4">
+                        <!-- ── Section: Lokasi ─────────────────────────────── -->
+                        <h6 class="fw-bold mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Lokasi Sampah</h6>
+                        <p class="text-muted small mb-3">Klik tombol GPS atau klik langsung pada peta untuk menandai lokasi sampah.</p>
+
+                        <!-- GPS button + badge -->
+                        <div class="d-flex gap-2 align-items-center mb-3 flex-wrap">
+                            <button type="button" id="btnGps" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-crosshair me-1"></i> Gunakan Lokasi Saya
+                            </button>
+                            <span id="locBadge" class="loc-badge no-loc">
+                                <i class="bi bi-question-circle me-1"></i> Belum ada lokasi
+                            </span>
+                        </div>
+
+                        <!-- Map -->
+                        <div id="map" class="mb-3" style="height:380px;min-height:200px;"></div>
+
+                        <!-- Hidden coordinate inputs -->
+                        <input type="hidden" name="latitude"  id="latInput"  value="">
+                        <input type="hidden" name="longitude" id="lngInput"  value="">
+                    </div>
+
+                    <div class="form-card mb-4">
+                        <!-- ── Section: Foto ───────────────────────────────── -->
+                        <h6 class="fw-bold mb-1"><i class="bi bi-camera-fill text-primary me-1"></i> Foto Sampah</h6>
+                        <p class="text-muted small mb-3">Ambil atau upload foto terkini kondisi sampah (maks. 5 MB).</p>
+
+                        <div class="mb-3">
+                            <input type="file" name="photo" id="photoInput" class="form-control"
+                                   accept="image/*" capture="environment" required
+                                   onchange="previewPhoto(this)">
+                            <small class="text-muted">Format: JPG, PNG, WebP</small>
+                        </div>
+
+                        <!-- Preview -->
+                        <div id="photoPreviewWrap" class="d-none mb-2">
+                            <img id="photoPreview" src="#" alt="Preview"
+                                 class="img-thumbnail" style="max-height:200px;object-fit:cover;border-radius:.6rem;">
+                        </div>
+                    </div>
+
+                    <div class="form-card mb-4">
+                        <!-- ── Section: Deskripsi ─────────────────────────── -->
+                        <h6 class="fw-bold mb-1"><i class="bi bi-chat-left-text text-warning me-1"></i> Keterangan (Opsional)</h6>
+                        <div class="mb-3">
+                            <textarea name="description" id="description" class="form-control"
+                                      rows="3" maxlength="1000"
+                                      placeholder="Contoh: Tumpukan sampah besar di pinggir jalan, berhari-hari tidak diangkut."
+                            ></textarea>
+                            <small class="text-muted"><span id="charCount">0</span>/1000 karakter</small>
+                        </div>
+                    </div>
+
+                    <div class="form-card mb-4">
+                        <!-- ── Section: Identitas (opsional) ─────────────── -->
+                        <h6 class="fw-bold mb-1"><i class="bi bi-person-fill text-secondary me-1"></i> Identitas Pelapor <span class="text-muted fw-normal">(Opsional)</span></h6>
+                        <p class="text-muted small mb-3">Tidak wajib diisi. Nama dan nomor HP tidak akan ditampilkan publik.</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nama</label>
+                                <input type="text" name="guest_name" class="form-control"
+                                       maxlength="150" placeholder="Nama Anda"
+                                       value="">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">No. HP / WhatsApp</label>
+                                <input type="text" name="guest_phone" class="form-control"
+                                       maxlength="50" placeholder="08xx-xxxx-xxxx"
+                                       value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Captcha ──────────────────────────────────────────── -->
+                                        <div class="form-card mb-4">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-shield-check text-info me-1"></i> Verifikasi Keamanan</h6>
+                        <div class="mb-3">
+    <div class="p-3 border rounded-3 bg-light d-flex align-items-center gap-3">
+        <div class="bg-success bg-opacity-10 border border-success rounded-3 px-4 py-2 text-center flex-shrink-0">
+            <span class="fs-5 fw-bold text-success font-monospace">8 x 6</span>
+            <div class="text-muted" style="font-size:11px;">= ?</div>
+        </div>
+        <div class="flex-grow-1">
+            <input type="number" name="captcha_answer" id="captchaAnswer"
+                   class="form-control" placeholder="Masukkan hasil"
+                   autocomplete="off" required>
+            <small class="text-muted">Hitung dan masukkan hasilnya.</small>
+        </div>
+    </div>
+</div>                    </div>
+                    
+                    <!-- ── Submit ───────────────────────────────────────────── -->
+                    <div class="d-grid">
+                        <button type="submit" id="submitBtn" class="btn btn-success btn-lg" disabled>
+                            <i class="bi bi-send-fill me-2"></i> Kirim Laporan
+                        </button>
+                        <small class="text-center text-muted mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Tombol aktif setelah lokasi ditentukan dan foto dipilih.
+                        </small>
+                    </div>
+                </form>
+
+                <!-- Login hint -->
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        Punya akun? <a href="http://localhost:8080/auth/login" class="text-success fw-semibold">Masuk</a>
+                        untuk melacak riwayat laporan Anda.
+                    </small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Footer -->
+<footer class="py-5 mt-0">
+    <div class="container">
+        <div class="row align-items-center gy-3">
+            <div class="col-md-5">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <img src="http://localhost:8080/uploads/brand/1774860080_65e6100b1ae666ce6495.png" height="32"
+                         alt="SAMPAHAN">
+                    <span class="fw-bold fs-5 text-white">SAMPAHAN</span>
+                </div>
+                <p class="mb-0" style="color:#94a3b8;font-size:.87rem;">
+                    Sistem Informasi Pengelolaan Sampah Berbasis Web-GIS<br>
+                    Kota Jakarta Pusat                </p>
+            </div>
+            <div class="col-md-4">
+                <ul class="list-unstyled mb-0" style="color:#94a3b8;font-size:.87rem;">
+                    <li><a href="http://localhost:8080/" class="text-decoration-none" style="color:#94a3b8;"><i class="bi bi-house me-2"></i>Beranda</a></li>
+                    <li class="mt-1"><a href="http://localhost:8080/peta-sebaran" class="text-decoration-none" style="color:#94a3b8;"><i class="bi bi-map me-2"></i>Peta Sebaran</a></li>
+                    <li class="mt-1"><a href="http://localhost:8080/auth/register" class="text-decoration-none" style="color:#94a3b8;"><i class="bi bi-person-plus me-2"></i>Daftar Gratis</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 text-md-end">
+                <p class="mb-0" style="color:#64748b;font-size:.8rem;">
+                    &copy; 2026 SAMPAHAN<br>
+                    All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Scroll-aware navbar
+window.addEventListener('scroll', () => {
+    document.getElementById('mainNavbar').classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+// Auto-close mobile nav on link click
+document.querySelectorAll('#publicNav .nav-link-pub, #publicNav .btn').forEach(el => {
+    el.addEventListener('click', () => {
+        const collapse = document.getElementById('publicNav');
+        const bsCollapse = bootstrap.Collapse.getInstance(collapse);
+        if (bsCollapse) bsCollapse.hide();
+    });
+});
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    // ── Map init ─────────────────────────────────────────────────────────────
+    const defLat  = parseFloat(document.getElementById('latInput').value  || '-6.1822261');
+    const defLng  = parseFloat(document.getElementById('lngInput').value  || '106.7952648');
+    const defZoom = 12;
+
+    const map = L.map('map').setView([defLat, defLng], defZoom);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+        referrerPolicy: 'strict-origin-when-cross-origin',
+        maxZoom: 19,
+    }).addTo(map);
+
+    let marker = null;
+    let locationLocked = false;
+    const gpsBtn = document.getElementById('btnGps');
+
+    function lockLocation() {
+        if (locationLocked) {
+            return;
+        }
+
+        locationLocked = true;
+        map.off('click', onMapClick);
+        gpsBtn.disabled = true;
+        gpsBtn.classList.add('disabled');
+        gpsBtn.innerHTML = '<i class="bi bi-lock-fill me-1"></i> Lokasi Terkunci';
+    }
+
+    function setLocation(lat, lng) {
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lng], {
+            icon: L.icon({
+                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+                shadowSize: [41, 41],
+            }),
+        }).addTo(map);
+
+        document.getElementById('latInput').value = lat.toFixed(7);
+        document.getElementById('lngInput').value = lng.toFixed(7);
+
+        const badge = document.getElementById('locBadge');
+        badge.className = 'loc-badge';
+        badge.innerHTML = `<i class="bi bi-geo-alt-fill me-1"></i>${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        checkReady();
+    }
+
+    // Click on map (first click only)
+    function onMapClick(e) {
+        if (locationLocked) {
+            return;
+        }
+
+        setLocation(e.latlng.lat, e.latlng.lng);
+        lockLocation();
+    }
+
+    map.on('click', onMapClick);
+
+    // GPS button
+    gpsBtn.addEventListener('click', function () {
+        if (locationLocked) {
+            return;
+        }
+
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mendeteksi…';
+
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                setLocation(pos.coords.latitude, pos.coords.longitude);
+                map.setView([pos.coords.latitude, pos.coords.longitude], 16);
+                lockLocation();
+            },
+            () => {
+                alert('Tidak dapat mengakses lokasi. Pastikan izin lokasi diaktifkan.');
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-crosshair me-1"></i> Gunakan Lokasi Saya';
+            },
+            { timeout: 10000 }
+        );
+    });
+
+    // Pre-fill from old() if set
+    const prefilledLat = document.getElementById('latInput').value;
+    const prefilledLng = document.getElementById('lngInput').value;
+    if (prefilledLat && prefilledLng) {
+        setLocation(parseFloat(prefilledLat), parseFloat(prefilledLng));
+        map.setView([parseFloat(prefilledLat), parseFloat(prefilledLng)], 16);
+        lockLocation();
+    }
+
+    // ── Photo preview & submit gate ───────────────────────────────────────────
+    function checkReady() {
+        const hasLoc   = document.getElementById('latInput').value !== '';
+        const hasPhoto = document.getElementById('photoInput').files.length > 0;
+        document.getElementById('submitBtn').disabled = !(hasLoc && hasPhoto);
+    }
+
+    document.getElementById('photoInput').addEventListener('change', checkReady);
+
+    window.previewPhoto = function (input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('photoPreview').src = e.target.result;
+                document.getElementById('photoPreviewWrap').classList.remove('d-none');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    // ── Description character counter ────────────────────────────────────────
+    const descEl = document.getElementById('description');
+    descEl.addEventListener('input', () => {
+        document.getElementById('charCount').textContent = descEl.value.length;
+    });
+    document.getElementById('charCount').textContent = descEl.value.length;
+})();
+</script></body>
+</html>

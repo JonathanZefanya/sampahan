@@ -51,6 +51,15 @@ class GuestReportController extends BaseController
 
     public function store()
     {
+        $ip = $this->request->getIPAddress() ?: 'unknown';
+        $throttleKey = 'guest_report_' . hash('sha256', $ip);
+
+        // Basic anti-spam guard for guest submissions.
+        if (! service('throttler')->check($throttleKey, 8, 300)) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Terlalu banyak percobaan. Coba lagi dalam 5 menit.');
+        }
+
         // ── 0. Captcha must be configured to allow guest submissions ─────────
         if (! $this->captcha->isEnabled()) {
             return redirect()->to(base_url())
@@ -69,7 +78,7 @@ class GuestReportController extends BaseController
                       ?? '';
             }
 
-            if (! $this->captcha->verify($token, $this->request->getIPAddress())) {
+            if (! $this->captcha->verify($token, $ip)) {
                 return redirect()->back()->withInput()
                     ->with('error', 'Verifikasi captcha gagal. Pastikan jawaban benar dan coba lagi.');
             }

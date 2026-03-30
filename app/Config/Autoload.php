@@ -58,7 +58,11 @@ class Autoload extends AutoloadConfig
      *
      * @var array<string, string>
      */
-    public $classmap = [];
+    public $classmap = [
+        'App\\Services\\ImageAnalysisResult'       => APPPATH . 'Services/ImageAnalysisService.php',
+        'App\\Services\\MockImageAnalysisService'  => APPPATH . 'Services/ImageAnalysisService.php',
+        'App\\Services\\GoogleVisionAnalysisService' => APPPATH . 'Services/ImageAnalysisService.php',
+    ];
 
     /**
      * -------------------------------------------------------------------

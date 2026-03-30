@@ -29,23 +29,6 @@ $extraStyle = '
                     <p class="text-muted"><?= $cityName ? "Wilayah {$cityName}" : $appName ?> &mdash; Tidak perlu akun, laporan Anda langsung diterima.</p>
                 </div>
 
-                <!-- Flash messages -->
-                <?php if (session()->has('success')): ?>
-                <div class="alert alert-success alert-dismissible d-flex gap-2 align-items-center mb-4" role="alert">
-                    <i class="bi bi-check-circle-fill flex-shrink-0"></i>
-                    <div><?= esc(session('success')) ?></div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php endif; ?>
-
-                <?php if (session()->has('error')): ?>
-                <div class="alert alert-danger alert-dismissible d-flex gap-2 align-items-center mb-4" role="alert">
-                    <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
-                    <div><?= esc(session('error')) ?></div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php endif; ?>
-
                 <?php if (session()->has('errors')): ?>
                 <div class="alert alert-danger mb-4">
                     <strong><i class="bi bi-exclamation-triangle me-1"></i>Terdapat kesalahan:</strong>
@@ -170,23 +153,38 @@ $extraStyle = '
 </section>
 
 <?php
-$extraScripts = <<<'JS'
+$extraScripts = <<<JS
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
     // ── Map init ─────────────────────────────────────────────────────────────
-    const defLat  = parseFloat(document.getElementById('latInput').value  || '<?= $mapLat ?>');
-    const defLng  = parseFloat(document.getElementById('lngInput').value  || '<?= $mapLng ?>');
-    const defZoom = <?= (int)$mapZoom ?>;
+    const defLat  = parseFloat(document.getElementById('latInput').value  || '{$mapLat}');
+    const defLng  = parseFloat(document.getElementById('lngInput').value  || '{$mapLng}');
+    const defZoom = {$mapZoom};
 
     const map = L.map('map').setView([defLat, defLng], defZoom);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+        referrerPolicy: 'strict-origin-when-cross-origin',
         maxZoom: 19,
     }).addTo(map);
 
     let marker = null;
+    let locationLocked = false;
+    const gpsBtn = document.getElementById('btnGps');
+
+    function lockLocation() {
+        if (locationLocked) {
+            return;
+        }
+
+        locationLocked = true;
+        map.off('click', onMapClick);
+        gpsBtn.disabled = true;
+        gpsBtn.classList.add('disabled');
+        gpsBtn.innerHTML = '<i class="bi bi-lock-fill me-1"></i> Lokasi Terkunci';
+    }
 
     function setLocation(lat, lng) {
         if (marker) map.removeLayer(marker);
@@ -204,15 +202,28 @@ $extraScripts = <<<'JS'
 
         const badge = document.getElementById('locBadge');
         badge.className = 'loc-badge';
-        badge.innerHTML = `<i class="bi bi-geo-alt-fill me-1"></i>${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        badge.innerHTML = `<i class="bi bi-geo-alt-fill me-1"></i>\${lat.toFixed(5)}, \${lng.toFixed(5)}`;
         checkReady();
     }
 
-    // Click on map
-    map.on('click', e => setLocation(e.latlng.lat, e.latlng.lng));
+    // Click on map (first click only)
+    function onMapClick(e) {
+        if (locationLocked) {
+            return;
+        }
+
+        setLocation(e.latlng.lat, e.latlng.lng);
+        lockLocation();
+    }
+
+    map.on('click', onMapClick);
 
     // GPS button
-    document.getElementById('btnGps').addEventListener('click', function () {
+    gpsBtn.addEventListener('click', function () {
+        if (locationLocked) {
+            return;
+        }
+
         this.disabled = true;
         this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mendeteksi…';
 
@@ -220,8 +231,7 @@ $extraScripts = <<<'JS'
             pos => {
                 setLocation(pos.coords.latitude, pos.coords.longitude);
                 map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-                this.disabled = false;
-                this.innerHTML = '<i class="bi bi-crosshair me-1"></i> Gunakan Lokasi Saya';
+                lockLocation();
             },
             () => {
                 alert('Tidak dapat mengakses lokasi. Pastikan izin lokasi diaktifkan.');
@@ -238,6 +248,7 @@ $extraScripts = <<<'JS'
     if (prefilledLat && prefilledLng) {
         setLocation(parseFloat(prefilledLat), parseFloat(prefilledLng));
         map.setView([parseFloat(prefilledLat), parseFloat(prefilledLng)], 16);
+        lockLocation();
     }
 
     // ── Photo preview & submit gate ───────────────────────────────────────────

@@ -23,6 +23,7 @@ class CaptchaService
 
     private const SESSION_KEY    = 'captcha_answer';
     private const SESSION_EXPIRY = 'captcha_expiry';
+    private const SESSION_QUESTION = 'captcha_question';
     private const TTL            = 600; // 10 minutes
 
     public function __construct()
@@ -69,6 +70,16 @@ class CaptchaService
             return '';
         }
 
+        $existingAnswer   = $this->session->get(self::SESSION_KEY);
+        $existingExpiry   = (int) ($this->session->get(self::SESSION_EXPIRY) ?? 0);
+        $existingQuestion = $this->session->get(self::SESSION_QUESTION);
+
+        // Keep one challenge stable until used or expired to avoid
+        // refresh/tab race that makes a correct answer look invalid.
+        if ($existingAnswer !== null && $existingQuestion !== null && time() <= $existingExpiry) {
+            return (string) $existingQuestion;
+        }
+
         $ops = ['+', '-', 'x'];
         $op  = $ops[array_rand($ops)];
 
@@ -92,6 +103,7 @@ class CaptchaService
 
         $this->session->set(self::SESSION_KEY,    (string) $ans);
         $this->session->set(self::SESSION_EXPIRY, time() + self::TTL);
+        $this->session->set(self::SESSION_QUESTION, "{$a} {$op} {$b}");
 
         return "{$a} {$op} {$b}";
     }
@@ -177,9 +189,10 @@ class CaptchaService
         $expected = $this->session->get(self::SESSION_KEY);
         $expiry   = $this->session->get(self::SESSION_EXPIRY);
 
-        // Invalidate immediately  one-time use
+        // Invalidate immediately (one-time attempt per challenge).
         $this->session->remove(self::SESSION_KEY);
         $this->session->remove(self::SESSION_EXPIRY);
+        $this->session->remove(self::SESSION_QUESTION);
 
         if ($expected === null) {
             return false; // no challenge was generated
@@ -188,7 +201,7 @@ class CaptchaService
             return false; // challenge expired
         }
 
-        return trim($token) === trim($expected);
+        return hash_equals(trim((string) $expected), trim($token));
     }
 
     private function recaptchaWidget(): string
