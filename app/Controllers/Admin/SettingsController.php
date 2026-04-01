@@ -140,13 +140,34 @@ class SettingsController extends BaseController
      */
     public function uploadGeoJson()
     {
-        $pastedJson = $this->request->getPost('city_boundary_geojson');
+        $pastedJson = trim((string) $this->request->getPost('city_boundary_geojson'));
+        $file = $this->request->getFile('geojson_file');
 
-        // Option A: JSON pasted in textarea
-        if (! empty($pastedJson)) {
-            $decoded = json_decode($pastedJson);
+        // File is prioritized when both file + textarea are filled.
+        $hasUploadedFile = $file && $file->getError() !== UPLOAD_ERR_NO_FILE;
+
+        if ($hasUploadedFile) {
+            if (! $file->isValid()) {
+                return redirect()->to('/admin/settings#tab-map')
+                    ->with('error', 'File GeoJSON tidak valid atau gagal diunggah.');
+            }
+
+            $content = file_get_contents($file->getTempName());
+            json_decode($content);
+
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return redirect()->to('/admin/settings#map')
+                return redirect()->to('/admin/settings#tab-map')
+                    ->with('error', 'File bukan GeoJSON valid: ' . json_last_error_msg());
+            }
+
+            $this->settingModel->setValue('city_boundary_geojson', $content, 'map');
+            return redirect()->to('/admin/settings#tab-map')->with('success', 'Batas wilayah (GeoJSON) berhasil dimuat dari file.');
+        }
+
+        if ($pastedJson !== '') {
+            json_decode($pastedJson);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return redirect()->to('/admin/settings#tab-map')
                     ->with('error', 'GeoJSON tidak valid: ' . json_last_error_msg());
             }
 
@@ -154,22 +175,7 @@ class SettingsController extends BaseController
             return redirect()->to('/admin/settings#tab-map')->with('success', 'Batas wilayah (GeoJSON) disimpan.');
         }
 
-        // Option B: File upload
-        $file = $this->request->getFile('geojson_file');
-        if (! $file || ! $file->isValid()) {
-            return redirect()->to('/admin/settings')->with('error', 'Tidak ada file GeoJSON yang diunggah.');
-        }
-
-        $content = file_get_contents($file->getTempName());
-        $decoded = json_decode($content);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return redirect()->to('/admin/settings')
-                ->with('error', 'File bukan GeoJSON valid: ' . json_last_error_msg());
-        }
-
-        $this->settingModel->setValue('city_boundary_geojson', $content, 'map');
-        return redirect()->to('/admin/settings#tab-map')->with('success', 'Batas wilayah (GeoJSON) berhasil dimuat dari file.');
+        return redirect()->to('/admin/settings#tab-map')->with('error', 'Isi GeoJSON dari file atau textarea terlebih dahulu.');
     }
 
     // ─── Private helpers ─────────────────────────────────────────────────────
