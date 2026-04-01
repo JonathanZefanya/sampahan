@@ -113,8 +113,12 @@ $totalUsers = count($users ?? []);
                                     <span class="d-none d-xl-inline"><?= $u['is_active'] ? ' Nonaktifkan' : ' Aktifkan' ?></span>
                                 </button>
                                 <?php if ($u['is_active']): ?>
-                                <a href="<?= base_url('admin/users/' . $u['id'] . '/impersonate') ?>"
-                                   class="btn btn-sm btn-outline-info" title="Login Sebagai User Ini">
+                                          <a href="#"
+                                              class="btn btn-sm btn-outline-info js-impersonate-btn"
+                                              data-url="<?= base_url('admin/users/' . $u['id'] . '/impersonate') ?>"
+                                              data-name="<?= esc($u['name']) ?>"
+                                              data-email="<?= esc($u['email']) ?>"
+                                              title="Login Sebagai User Ini">
                                     <i class="bi bi-arrow-left-right"></i>
                                     <span class="d-none d-xl-inline"> Login</span>
                                 </a>
@@ -185,5 +189,32 @@ function toggleUser(id, btn) {
         });
     });
 }
+
+function confirmImpersonate(url, name, email) {
+    const safeEmail = (email || '-').trim() || '-';
+    Swal.fire({
+        icon: 'warning',
+        title: 'Konfirmasi',
+        text: `Yakin ingin login sebagai ${name} <b>(${safeEmail})</b>?`,
+        showCancelButton: true,
+        confirmButtonColor: '#0dcaf0',
+        confirmButtonText: 'Ya, Login',
+        cancelButtonText: 'Batal',
+    }).then(result => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+
+document.querySelectorAll('.js-impersonate-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = btn.dataset.url || '#';
+        const name = (btn.dataset.name || 'user').trim() || 'user';
+        const email = (btn.dataset.email || '').trim();
+        confirmImpersonate(url, name, email);
+    });
+});
 </script>
 <?php $extraScripts = ob_get_clean(); ?>
