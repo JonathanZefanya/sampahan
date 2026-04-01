@@ -131,9 +131,10 @@
                     <tr><td colspan="5" class="text-center text-muted py-4">Belum ada laporan.</td></tr>
                 <?php else: ?>
                     <?php foreach ($recentReports as $r): ?>
+                    <?php $reporterName = trim((string) ($r['reporter_name'] ?? '')); ?>
                     <tr>
                         <td><?= $r['id'] ?></td>
-                        <td><?= esc($r['reporter_name'] ?? '&ndash;') ?></td>
+                        <td><?= esc($reporterName !== '' ? $reporterName : '-') ?></td>
                         <td><span class="badge badge-<?= $r['status'] ?> rounded-pill px-2 py-1"><?= ucfirst(str_replace('_',' ',$r['status'])) ?></span></td>
                         <td><small class="text-muted"><?= $r['latitude'] ?>, <?= $r['longitude'] ?></small></td>
                         <td><small><?= date('d M Y H:i', strtotime($r['created_at'])) ?></small></td>
@@ -185,7 +186,10 @@ function fetchStats(){
         if(!data.recentReports.length){
             tbody.innerHTML='<tr><td colspan="5" class="text-center text-muted py-4">Belum ada laporan pada periode ini.</td></tr>';
         }else{
-            tbody.innerHTML=data.recentReports.map(r=>`<tr><td>${r.id}</td><td>${escHtml(r.reporter_name)}</td><td><span class="badge badge-${r.status} rounded-pill px-2 py-1">${r.status.replace(/_/g,' ')}</span></td><td><small class="text-muted">${r.latitude??''}, ${r.longitude??''}</small></td><td><small>${r.created_at}</small></td></tr>`).join('');
+            tbody.innerHTML=data.recentReports.map(r=>{
+                const reporterName=(r.reporter_name??'').toString().trim()||'-';
+                return `<tr><td>${r.id}</td><td>${escHtml(reporterName)}</td><td><span class="badge badge-${r.status} rounded-pill px-2 py-1">${r.status.replace(/_/g,' ')}</span></td><td><small class="text-muted">${r.latitude??''}, ${r.longitude??''}</small></td><td><small>${r.created_at}</small></td></tr>`;
+            }).join('');
         }
     }).catch(()=>{}).finally(()=>spinner.style.display='none');
 }
