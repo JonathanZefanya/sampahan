@@ -241,8 +241,25 @@ $extraHead = '
                         <input type="text" name="smtp_from_name" class="form-control"
                                value="<?= esc($mail['smtp_from_name'] ?? '') ?>" placeholder="SAMPAHAN System">
                     </div>
+                    <div class="col-md-12">
+                        <div class="alert alert-light border d-flex gap-2 align-items-start py-2 mb-0">
+                            <i class="bi bi-info-circle text-primary mt-1"></i>
+                            <div class="small">
+                                Gunakan <strong>Test SMTP</strong> untuk mengecek konfigurasi tanpa menyimpan perubahan terlebih dahulu.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Email Tujuan Tes SMTP</label>
+                        <input type="email" name="smtp_test_to" class="form-control"
+                               value="<?= esc($mail['smtp_user'] ?? '') ?>" placeholder="admin@domain.com">
+                        <small class="text-muted">Email ini hanya dipakai saat menekan tombol Test SMTP.</small>
+                    </div>
                 </div>
-                <div class="card-footer bg-transparent">
+                <div class="card-footer bg-transparent d-flex gap-2 justify-content-end">
+                    <button type="submit" formaction="<?= base_url('admin/settings/test-smtp') ?>" class="btn btn-outline-primary px-4">
+                        <i class="bi bi-send-check me-1"></i>Test SMTP
+                    </button>
                     <button type="submit" class="btn btn-success px-4"><i class="bi bi-save me-1"></i>Simpan Konfigurasi Email</button>
                 </div>
             </div>

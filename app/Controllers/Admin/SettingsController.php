@@ -178,6 +178,64 @@ class SettingsController extends BaseController
         return redirect()->to('/admin/settings#tab-map')->with('error', 'Isi GeoJSON dari file atau textarea terlebih dahulu.');
     }
 
+    /**
+     * Test SMTP config from current form values without saving it.
+     */
+    public function testSmtp()
+    {
+        $smtpHost = trim((string) $this->request->getPost('smtp_host'));
+        $smtpPort = (int) $this->request->getPost('smtp_port');
+        $smtpUser = trim((string) $this->request->getPost('smtp_user'));
+        $smtpPass = (string) $this->request->getPost('smtp_pass');
+        $smtpFrom = trim((string) $this->request->getPost('smtp_from_name'));
+        $smtpCrypto = strtolower(trim((string) $this->request->getPost('smtp_crypto')));
+        $testTo = trim((string) $this->request->getPost('smtp_test_to'));
+
+        if ($smtpHost === '' || $smtpPort <= 0 || $smtpUser === '' || $smtpPass === '' || $testTo === '') {
+            return redirect()->to('/admin/settings#tab-mail')
+                ->with('error', 'Lengkapi SMTP Host, Port, Username, Password, dan Email Tujuan Tes terlebih dahulu.');
+        }
+
+        if (! filter_var($testTo, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->to('/admin/settings#tab-mail')
+                ->with('error', 'Email Tujuan Tes tidak valid.');
+        }
+
+        if (! in_array($smtpCrypto, ['tls', 'ssl', 'none'], true)) {
+            $smtpCrypto = 'tls';
+        }
+
+        $email = \Config\Services::email();
+        $email->initialize([
+            'protocol'   => 'smtp',
+            'SMTPHost'   => $smtpHost,
+            'SMTPPort'   => $smtpPort,
+            'SMTPUser'   => $smtpUser,
+            'SMTPPass'   => $smtpPass,
+            'SMTPCrypto' => $smtpCrypto === 'none' ? '' : $smtpCrypto,
+            'fromEmail'  => $smtpUser,
+            'fromName'   => $smtpFrom !== '' ? $smtpFrom : 'SAMPAHAN',
+            'mailType'   => 'html',
+            'charset'    => 'UTF-8',
+            'newline'    => "\r\n",
+            'CRLF'       => "\r\n",
+        ]);
+
+        $email->setFrom($smtpUser, $smtpFrom !== '' ? $smtpFrom : 'SAMPAHAN');
+        $email->setTo($testTo);
+        $email->setSubject('Test SMTP - SAMPAHAN');
+        $email->setMessage('<p>Ini adalah email uji koneksi SMTP dari panel admin SAMPAHAN.</p><p>Jika email ini diterima, konfigurasi SMTP Anda valid.</p>');
+
+        if (! $email->send()) {
+            log_message('error', '[SMTP TEST] Failed: ' . $email->printDebugger(['headers']));
+            return redirect()->to('/admin/settings#tab-mail')
+                ->with('error', 'Test SMTP gagal. Periksa host, port, enkripsi, username/password, dan koneksi server.');
+        }
+
+        return redirect()->to('/admin/settings#tab-mail')
+            ->with('success', 'Test SMTP berhasil. Email uji terkirim ke ' . $testTo . '.');
+    }
+
     // ─── Private helpers ─────────────────────────────────────────────────────
 
     private function deleteOldFile(?string $relativePath, array $keepDefaults = []): void

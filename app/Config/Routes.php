@@ -46,6 +46,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function (RouteCol
     $routes->post('settings/upload-logo',   'Admin\SettingsController::uploadLogo');
     $routes->post('settings/upload-favicon','Admin\SettingsController::uploadFavicon');
     $routes->post('settings/upload-geojson','Admin\SettingsController::uploadGeoJson');
+    $routes->post('settings/test-smtp',     'Admin\SettingsController::testSmtp');
 
     // Report management
     $routes->get('reports',                     'Admin\ReportController::index');
