@@ -71,18 +71,20 @@ $extraStyle = '
                         <!-- ── Section: Foto ───────────────────────────────── -->
                         <h6 class="fw-bold mb-1"><i class="bi bi-camera-fill text-primary me-1"></i> Foto Sampah</h6>
                         <p class="text-muted small mb-3">Ambil atau upload foto terkini kondisi sampah (maks. 5 MB).</p>
-
                         <div class="mb-3">
                             <input type="file" name="photo" id="photoInput" class="form-control"
-                                   accept="image/*" capture="environment" required
-                                   onchange="previewPhoto(this)">
+                                accept=".jpg,.jpeg,.png,.webp"
+                                capture="environment" required
+                                onchange="previewPhoto(this)">
+
                             <small class="text-muted">Format: JPG, PNG, WebP</small>
                         </div>
 
                         <!-- Preview -->
                         <div id="photoPreviewWrap" class="d-none mb-2">
                             <img id="photoPreview" src="#" alt="Preview"
-                                 class="img-thumbnail" style="max-height:200px;object-fit:cover;border-radius:.6rem;">
+                                class="img-thumbnail"
+                                style="max-height:200px;object-fit:cover;border-radius:.6rem;">
                         </div>
                     </div>
 
@@ -155,6 +157,7 @@ $extraStyle = '
 <?php
 $extraScripts = <<<JS
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 (function () {
     // ── Map init ─────────────────────────────────────────────────────────────
@@ -261,14 +264,68 @@ $extraScripts = <<<JS
     document.getElementById('photoInput').addEventListener('change', checkReady);
 
     window.previewPhoto = function (input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                document.getElementById('photoPreview').src = e.target.result;
-                document.getElementById('photoPreviewWrap').classList.remove('d-none');
-            };
-            reader.readAsDataURL(input.files[0]);
+        const file = input.files[0];
+
+        if (!file) {
+            return;
         }
+
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Format Tidak Didukung',
+                text: 'Hanya file JPG, PNG, dan WebP yang diperbolehkan.',
+                confirmButtonColor: '#198754'
+            });
+
+            input.value = '';
+
+            document.getElementById('photoPreview').src = '#';
+
+            document.getElementById('photoPreviewWrap')
+                .classList.add('d-none');
+
+            checkReady();
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Ukuran Terlalu Besar',
+                text: 'Ukuran foto maksimal 5 MB.',
+                confirmButtonColor: '#198754'
+            });
+
+            input.value = '';
+
+            document.getElementById('photoPreviewWrap')
+                .classList.add('d-none');
+
+            checkReady();
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = e => {
+            document.getElementById('photoPreview').src = e.target.result;
+
+            document.getElementById('photoPreviewWrap')
+                .classList.remove('d-none');
+        };
+
+        reader.readAsDataURL(file);
+
+        checkReady();
     };
 
     // ── Description character counter ────────────────────────────────────────

@@ -91,7 +91,21 @@ class GuestReportController extends BaseController
             'description' => 'permit_empty|max_length[1000]',
             'guest_name'  => 'permit_empty|max_length[150]',
             'guest_phone' => 'permit_empty|max_length[50]',
-            'photo'       => 'uploaded[photo]|is_image[photo]|max_size[photo,5120]',
+
+            'photo' => [
+                'rules' => 'uploaded[photo]'
+                    . '|is_image[photo]'
+                    . '|mime_in[photo,image/jpg,image/jpeg,image/png,image/webp]'
+                    . '|ext_in[photo,jpg,jpeg,png,webp]'
+                    . '|max_size[photo,5120]',
+
+                'errors' => [
+                    'mime_in'  => 'Format foto harus JPG, PNG, atau WebP.',
+                    'ext_in'   => 'Ekstensi file tidak valid.',
+                    'max_size' => 'Ukuran foto maksimal 5 MB.',
+                    'is_image' => 'File yang diupload harus berupa gambar.',
+                ],
+            ],
         ];
 
         if (! $this->validate($rules)) {
