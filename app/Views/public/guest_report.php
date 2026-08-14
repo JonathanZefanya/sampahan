@@ -134,9 +134,19 @@ $extraStyle = '
                         <button type="submit" id="submitBtn" class="btn btn-success btn-lg" disabled>
                             <i class="bi bi-send-fill me-2"></i> Kirim Laporan
                         </button>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="agree_terms" id="agreeTerms" class="form-check-input" required>
+                            <label for="agreeTerms" class="form-check-label small text-muted">
+                                Dengan mengirim laporan, saya menyetujui
+                                <a href="#" class="text-success fw-semibold" data-bs-toggle="modal" data-bs-target="#privacyModal">Kebijakan Privasi</a>
+                                dan
+                                <a href="#" class="text-success fw-semibold" data-bs-toggle="modal" data-bs-target="#termsModal">Syarat &amp; Ketentuan</a>.
+                            </label>
+                        </div>
+                        <br>
                         <small class="text-center text-muted mt-2">
                             <i class="bi bi-info-circle me-1"></i>
-                            Tombol aktif setelah lokasi ditentukan dan foto dipilih.
+                            Tombol aktif setelah lokasi ditentukan, foto dipilih, dan persetujuan dicentang.
                         </small>
                     </div>
                 </form>
@@ -153,6 +163,138 @@ $extraStyle = '
         </div>
     </div>
 </section>
+
+<!-- ── Modal: Kebijakan Privasi ─────────────────────────────────────────────── -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content" style="border-radius:1rem;border:none;">
+            <div class="modal-header bg-success bg-opacity-10 border-0" style="border-radius:1rem 1rem 0 0;">
+                <h5 class="modal-title fw-bold" id="privacyModalLabel">
+                    <i class="bi bi-shield-lock-fill text-success me-2"></i>Kebijakan Privasi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body small lh-lg">
+                <p class="text-muted mb-3">
+                    Kebijakan ini menjelaskan data apa saja yang dikumpulkan <?= esc($appName) ?> saat Anda
+                    mengirim laporan sampah sebagai tamu, dan bagaimana data tersebut digunakan.
+                </p>
+
+                <h6 class="fw-bold">1. Data yang Dikumpulkan</h6>
+                <ul>
+                    <li><strong>Titik lokasi (koordinat)</strong> sampah yang Anda tandai pada peta atau ambil dari GPS perangkat.</li>
+                    <li><strong>Foto sampah</strong> yang Anda unggah.</li>
+                    <li><strong>Keterangan</strong> tambahan yang Anda tulis (opsional).</li>
+                    <li><strong>Nama dan nomor HP/WhatsApp</strong> (opsional, hanya jika Anda mengisinya).</li>
+                    <li><strong>Alamat IP</strong> dan waktu pengiriman, untuk pencegahan spam.</li>
+                </ul>
+
+                <h6 class="fw-bold">2. Penggunaan Data</h6>
+                <p>
+                    Data digunakan untuk memverifikasi, menugaskan, dan menindaklanjuti penanganan sampah
+                    <?= $cityName ? 'di wilayah ' . esc($cityName) : '' ?>, serta untuk statistik agregat
+                    (jumlah laporan, titik rawan berulang) yang tidak mengidentifikasi individu.
+                </p>
+
+                <h6 class="fw-bold">3. Data yang Ditampilkan Publik</h6>
+                <p>
+                    Pada peta publik hanya ditampilkan titik lokasi, foto, keterangan, dan status laporan.
+                    <strong>Nama dan nomor HP pelapor tidak pernah ditampilkan publik</strong> dan hanya dapat
+                    dilihat oleh petugas serta administrator untuk keperluan konfirmasi.
+                </p>
+
+                <h6 class="fw-bold">4. Penyimpanan &amp; Keamanan</h6>
+                <p>
+                    Data disimpan pada server pengelola dengan akses terbatas pada petugas berwenang.
+                    Foto dan koordinat disimpan selama laporan masih dibutuhkan untuk pemantauan dan pelaporan.
+                </p>
+
+                <h6 class="fw-bold">5. Berbagi ke Pihak Ketiga</h6>
+                <p>
+                    Data tidak diperjualbelikan. Data hanya dapat dibagikan kepada instansi terkait penanganan
+                    kebersihan atau bila diwajibkan oleh peraturan perundang-undangan.
+                </p>
+
+                <h6 class="fw-bold">6. Hak Anda</h6>
+                <p>
+                    Anda dapat meminta koreksi atau penghapusan data laporan yang Anda kirim dengan menghubungi
+                    administrator melalui kanal kontak resmi <?= esc($appName) ?>.
+                </p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Saya Mengerti</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal: Syarat & Ketentuan ────────────────────────────────────────────── -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content" style="border-radius:1rem;border:none;">
+            <div class="modal-header bg-primary bg-opacity-10 border-0" style="border-radius:1rem 1rem 0 0;">
+                <h5 class="modal-title fw-bold" id="termsModalLabel">
+                    <i class="bi bi-file-earmark-text-fill text-primary me-2"></i>Syarat &amp; Ketentuan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body small lh-lg">
+                <p class="text-muted mb-3">
+                    Dengan mengirimkan laporan melalui <?= esc($appName) ?>, Anda menyatakan telah membaca
+                    dan menyetujui ketentuan berikut.
+                </p>
+
+                <h6 class="fw-bold">1. Kebenaran Laporan</h6>
+                <p>
+                    Laporan harus dibuat sesuai kondisi nyata di lapangan. Foto yang diunggah harus merupakan
+                    kondisi terkini pada titik yang dilaporkan, bukan foto rekayasa atau milik pihak lain.
+                </p>
+
+                <h6 class="fw-bold">2. Larangan</h6>
+                <ul>
+                    <li>Mengirim laporan palsu, bercanda, atau berulang untuk titik yang sama.</li>
+                    <li>Mengunggah foto yang mengandung unsur pornografi, kekerasan, SARA, atau data pribadi orang lain.</li>
+                    <li>Menggunakan sistem untuk spam, uji beban, atau tindakan yang mengganggu layanan.</li>
+                </ul>
+
+                <h6 class="fw-bold">3. Wilayah Layanan</h6>
+                <p>
+                    Laporan hanya diterima untuk titik yang berada di dalam batas wilayah administrasi
+                    <?= $cityName ? esc($cityName) : 'yang dilayani' ?>. Laporan di luar wilayah tersebut akan ditolak otomatis.
+                </p>
+
+                <h6 class="fw-bold">4. Proses Tindak Lanjut</h6>
+                <p>
+                    Laporan masuk berstatus <em>menunggu verifikasi</em>. Pengelola berhak menolak, menggabungkan
+                    laporan duplikat, atau menyesuaikan prioritas penanganan berdasarkan kondisi lapangan dan
+                    ketersediaan petugas. Tidak ada jaminan waktu penyelesaian tertentu.
+                </p>
+
+                <h6 class="fw-bold">5. Hak atas Konten</h6>
+                <p>
+                    Dengan mengunggah foto dan keterangan, Anda memberi izin kepada pengelola untuk menyimpan
+                    dan menampilkannya pada peta serta laporan kebersihan, termasuk untuk keperluan dokumentasi
+                    dan sosialisasi, tanpa mencantumkan identitas pribadi Anda.
+                </p>
+
+                <h6 class="fw-bold">6. Penyalahgunaan</h6>
+                <p>
+                    Pengelola dapat membatasi atau memblokir akses pengirim yang terbukti menyalahgunakan layanan,
+                    termasuk pembatasan otomatis berdasarkan alamat IP.
+                </p>
+
+                <h6 class="fw-bold">7. Perubahan Ketentuan</h6>
+                <p>
+                    Ketentuan ini dapat diperbarui sewaktu-waktu. Versi yang berlaku adalah yang ditampilkan
+                    pada halaman ini saat laporan dikirim.
+                </p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Saya Setuju</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php
 $extraScripts = <<<JS
@@ -258,10 +400,12 @@ $extraScripts = <<<JS
     function checkReady() {
         const hasLoc   = document.getElementById('latInput').value !== '';
         const hasPhoto = document.getElementById('photoInput').files.length > 0;
-        document.getElementById('submitBtn').disabled = !(hasLoc && hasPhoto);
+        const agreed   = document.getElementById('agreeTerms').checked;
+        document.getElementById('submitBtn').disabled = !(hasLoc && hasPhoto && agreed);
     }
 
     document.getElementById('photoInput').addEventListener('change', checkReady);
+    document.getElementById('agreeTerms').addEventListener('change', checkReady);
 
     window.previewPhoto = function (input) {
         const file = input.files[0];
