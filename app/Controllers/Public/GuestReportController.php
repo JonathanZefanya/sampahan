@@ -9,13 +9,6 @@ use App\Models\SettingModel;
 use App\Services\CaptchaService;
 use App\Services\MockImageAnalysisService;
 
-/**
- * GuestReportController
- *
- * Allows unauthenticated (guest) visitors to submit a trash report.
- * Identical pipeline to Masyarakat\ReportController::store() but without
- * a required session, and with an optional captcha gate.
- */
 class GuestReportController extends BaseController
 {
     private ReportModel    $reportModel;
@@ -178,6 +171,8 @@ class GuestReportController extends BaseController
             ReportModel::STATUS_PENDING,
             'Laporan oleh tamu (guest).'
         );
+
+        $this->captcha->clearChallenge();
 
         $msg = $isRecurrentHotspot
             ? 'Laporan berhasil dikirim. Catatan: lokasi ini sebelumnya pernah dilaporkan (Hotspot Berulang).'

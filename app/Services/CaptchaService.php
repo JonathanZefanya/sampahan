@@ -5,15 +5,7 @@ namespace App\Services;
 use App\Models\SettingModel;
 use CodeIgniter\Session\Session;
 
-/**
- * CaptchaService
- *
- * Supported providers:
- *   - 'none'       -> disabled; guest form is blocked
- *   - 'recaptcha'  -> Google reCAPTCHA v2
- *   - 'turnstile'  -> Cloudflare Turnstile
- *   - 'selfhosted' -> Built-in session-based math captcha; NO external keys needed
- */
+
 class CaptchaService
 {
     private string  $provider;
@@ -24,7 +16,9 @@ class CaptchaService
     private const SESSION_KEY    = 'captcha_answer';
     private const SESSION_EXPIRY = 'captcha_expiry';
     private const SESSION_QUESTION = 'captcha_question';
+    private const SESSION_ATTEMPTS = 'captcha_attempts';
     private const TTL            = 600; // 10 minutes
+    private const MAX_ATTEMPTS   = 5;
 
     public function __construct()
     {
@@ -59,25 +53,10 @@ class CaptchaService
     public function getProvider(): string { return $this->provider; }
     public function getSiteKey(): string  { return $this->siteKey; }
 
-    /**
-     * Generate a math challenge, store the correct answer in session, return
-     * the question string (e.g. "7 + 4").
-     * Only used by the selfhosted provider; other providers return ''.
-     */
     public function generateChallenge(): string
     {
         if ($this->provider !== 'selfhosted') {
             return '';
-        }
-
-        $existingAnswer   = $this->session->get(self::SESSION_KEY);
-        $existingExpiry   = (int) ($this->session->get(self::SESSION_EXPIRY) ?? 0);
-        $existingQuestion = $this->session->get(self::SESSION_QUESTION);
-
-        // Keep one challenge stable until used or expired to avoid
-        // refresh/tab race that makes a correct answer look invalid.
-        if ($existingAnswer !== null && $existingQuestion !== null && time() <= $existingExpiry) {
-            return (string) $existingQuestion;
         }
 
         $ops = ['+', '-', 'x'];
@@ -104,15 +83,11 @@ class CaptchaService
         $this->session->set(self::SESSION_KEY,    (string) $ans);
         $this->session->set(self::SESSION_EXPIRY, time() + self::TTL);
         $this->session->set(self::SESSION_QUESTION, "{$a} {$op} {$b}");
+        $this->session->set(self::SESSION_ATTEMPTS, 0);
 
         return "{$a} {$op} {$b}";
     }
 
-    /**
-     * Verify the captcha answer submitted with the form.
-     * For selfhosted: compares the plain text answer to the session value.
-     * For external providers: POST to their verify endpoint.
-     */
     public function verify(string $token, string $ip = ''): bool
     {
         if (! $this->isEnabled()) {
@@ -161,13 +136,14 @@ class CaptchaService
         return (bool) ($json['success'] ?? false);
     }
 
-    //  Widget HTML helper 
+    public function clearChallenge(): void
+    {
+        $this->session->remove(self::SESSION_KEY);
+        $this->session->remove(self::SESSION_EXPIRY);
+        $this->session->remove(self::SESSION_QUESTION);
+        $this->session->remove(self::SESSION_ATTEMPTS);
+    }
 
-    /**
-     * Return the widget HTML to embed in the guest form.
-     * For selfhosted pass the $question string returned by generateChallenge().
-     * Returns '' when captcha is disabled.
-     */
     public function widgetHtml(string $question = ''): string
     {
         if (! $this->isEnabled()) {
@@ -182,26 +158,32 @@ class CaptchaService
         };
     }
 
-    //  Private helpers 
-
     private function verifySelfHosted(string $token): bool
     {
         $expected = $this->session->get(self::SESSION_KEY);
         $expiry   = $this->session->get(self::SESSION_EXPIRY);
 
-        // Invalidate immediately (one-time attempt per challenge).
-        $this->session->remove(self::SESSION_KEY);
-        $this->session->remove(self::SESSION_EXPIRY);
-        $this->session->remove(self::SESSION_QUESTION);
-
         if ($expected === null) {
-            return false; // no challenge was generated
-        }
-        if (time() > (int) $expiry) {
-            return false; // challenge expired
+            return false;
         }
 
-        return hash_equals(trim((string) $expected), trim($token));
+        if (time() > (int) $expiry) {
+            $this->clearChallenge(); 
+            return false;
+        }
+
+        if (hash_equals(trim((string) $expected), trim($token))) {
+            return true;
+        }
+
+        $attempts = (int) ($this->session->get(self::SESSION_ATTEMPTS) ?? 0) + 1;
+        $this->session->set(self::SESSION_ATTEMPTS, $attempts);
+
+        if ($attempts >= self::MAX_ATTEMPTS) {
+            $this->clearChallenge(); // too many wrong answers -> new question
+        }
+
+        return false;
     }
 
     private function recaptchaWidget(): string

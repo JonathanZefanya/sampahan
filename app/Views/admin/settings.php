@@ -390,7 +390,7 @@ $extraHead = '
                             'none'       => ['icon' => 'bi-x-circle',       'label' => 'Nonaktif (tidak ada captcha)',          'color' => '#64748b'],
                             'recaptcha'  => ['icon' => 'bi-google',          'label' => 'Google reCAPTCHA v2',                   'color' => '#4285f4'],
                             'turnstile'  => ['icon' => 'bi-cloud-check',     'label' => 'Cloudflare Turnstile',                  'color' => '#f6821f'],
-                            'selfhosted' => ['icon' => 'bi-cpu',          'label' => 'Captcha Bawaan (Math Challenge)',         'color' => '#198754'],
+                            'selfhosted' => ['icon' => 'bi-file-person',          'label' => 'Self Captcha',         'color' => '#198754'],
                         ];
                         ?>
                         <div class="row g-3">
