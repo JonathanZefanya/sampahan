@@ -195,7 +195,7 @@ function confirmImpersonate(url, name, email) {
     Swal.fire({
         icon: 'warning',
         title: 'Konfirmasi',
-        text: `Yakin ingin login sebagai ${name} <b>(${safeEmail})</b>?`,
+        text: `Yakin ingin login sebagai ${name} (${safeEmail})?`,
         showCancelButton: true,
         confirmButtonColor: '#0dcaf0',
         confirmButtonText: 'Ya, Login',
